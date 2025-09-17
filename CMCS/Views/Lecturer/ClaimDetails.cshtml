@@ -10,7 +10,8 @@
         <p><strong>Claim ID:</strong> @claim.ClaimID</p>
         <p><strong>Claim Month:</strong> @claim.Month</p>
         <p><strong>Hours Worked:</strong> @claim.HoursWorked</p>
-        <p><strong>Hourly Rate:</strong> @claim.HourlyRate</p>
+        <p><strong>Hourly Rate:</strong>R @claim.HourlyRate</p>
+        <p><strong>Total Amount:</strong>R @claim.TotalAmount</p>
         <p>
             <strong>Status:</strong>
             <span style="color:@(claim.Status == "Approved" ? "#4CAF50" : claim.Status == "Rejected" ? "#C0392B" : "#D67F2B"); font-weight:bold;">
@@ -18,6 +19,7 @@
             </span>
         </p>
         <p><strong>Submitted On:</strong> @claim.SubmittedOn</p>
+        <p><strong>Submitted By:</strong> @claim.SubmittedBy</p>
         <p><strong>Approved By:</strong> @claim.ApprovedBy</p>
 
         <div>
@@ -33,7 +35,7 @@
         <a href="/Lecturer/Dashboard"
            style="display:inline-block; margin-top:15px; padding:10px 20px; background-color:#D67F2B; color:white; text-decoration:none; border-radius:6px; transition:background-color 0.3s;"
            onmouseover="this.style.backgroundColor='#B76A1F'" onmouseout="this.style.backgroundColor='#D67F2B'">
-            Back to Dashboard
+            Back To Dashboard
         </a>
     </div>
 </div>

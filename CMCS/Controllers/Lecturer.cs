@@ -9,7 +9,7 @@ namespace CMCS.Controllers
         {
             var claims = new[]
             {
-                new { Month = "July 2025", HoursWorked = 40, HourlyRate = 500, Status = "Approved" },
+                new { Month = "July 2025", HoursWorked = 40, HourlyRate = 500, Status = "Pending" },
                 new { Month = "August 2025", HoursWorked = 35, HourlyRate = 500, Status = "Pending" }
             };
 
@@ -29,13 +29,13 @@ namespace CMCS.Controllers
                 Month = month,
                 HoursWorked = 40,
                 HourlyRate = 500,
+                TotalAmount = 20000,
                 Status = "Pending",
                 SubmittedOn = "2025-07-05",
+                SubmittedBy = "John Doe",
                 Documents = new[] { "Invoice.pdf", "Report.docx" },
-                ApprovedBy = "-"
-
+                ApprovedBy = "-" 
             };
-
             ViewBag.Claim = claim;
             return View();
         }

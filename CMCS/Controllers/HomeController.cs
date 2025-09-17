@@ -20,7 +20,7 @@ namespace CMCS.Controllers
 
         public IActionResult Privacy()
         {
-            return View();
+            return RedirectToAction("Index"); // go back to home page
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
