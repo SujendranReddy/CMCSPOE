@@ -1,0 +1,44 @@
+﻿@{
+    ViewData["Title"] = "Coordinator Dashboard";
+    var claims = ViewBag.Claims;
+}
+
+<div style="font-family: Arial, sans-serif; padding: 30px; background-color:#F5F5F5; min-height:100vh;">
+    <h2 style="color:#1F3B6B; margin-bottom:20px;">Welcome, Programme Coordinator</h2>
+
+    <h3 style="color:#1F3B6B; margin-bottom:10px;">Submitted Claims</h3>
+    <table style="width:100%; border-collapse:collapse; background-color:white; border-radius:8px; overflow:hidden;">
+        <thead>
+            <tr style="background-color:#2A5298; color:white; text-align:left;">
+                <th style="padding:10px;">Month</th>
+                <th style="padding:10px;">Lecturer</th>
+                <th style="padding:10px;">Hours Worked</th>
+                <th style="padding:10px;">Hourly Rate</th>
+                <th style="padding:10px;">Status</th>
+                <th style="padding:10px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var claim in claims)
+            {
+                var statusColor = claim.Status == "Approved" ? "#4CAF50" : claim.Status == "Rejected" ? "#C0392B" : "#D67F2B"; 
+                <tr style="border-bottom:1px solid #ccc;">
+                    <td style="padding:10px;">@claim.Month</td>
+                    <td style="padding:10px;">@claim.Lecturer</td>
+                    <td style="padding:10px;">@claim.HoursWorked</td>
+                    <td style="padding:10px;">@claim.HourlyRate</td>
+                    <td style="padding:10px; color:white; font-weight:bold; background-color:@statusColor; text-align:center;">@claim.Status</td>
+                    <td style="padding:10px;">
+                        <a href="/Coordinator/ClaimDetails?month=@claim.Month" 
+                           style="padding:6px 12px; background-color:#2A5298; color:white; text-decoration:none; border-radius:6px; margin-right:5px; transition:background-color 0.3s;"
+                           onmouseover="this.style.backgroundColor='#1D4075'" onmouseout="this.style.backgroundColor='#2A5298'">
+                           Details
+                        </a>
+                        <button style="padding:6px 12px; background-color:#4CAF50; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:5px;">Approve</button>
+                        <button style="padding:6px 12px; background-color:#C0392B; color:white; border:none; border-radius:6px; cursor:pointer;">Reject</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

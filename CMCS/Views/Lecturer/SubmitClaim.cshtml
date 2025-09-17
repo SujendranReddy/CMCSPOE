@@ -1,0 +1,35 @@
+﻿@{
+    ViewData["Title"] = "Submit Claim";
+}
+
+<div style="font-family: Arial, sans-serif; padding:30px; background-color:#F5F5F5; min-height:100vh;">
+    <h2 style="color:#2C3E50; margin-bottom:20px;">Submit a New Claim</h2>
+
+    <form style="max-width:500px; background-color:white; padding:20px; border-radius:12px;">
+        <div style="margin-bottom:15px;">
+            <label style="font-weight:bold; color:#2C3E50;">Claim Month</label>
+            <input type="month" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;" />
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label style="font-weight:bold; color:#2C3E50;">Hours Worked</label>
+            <input type="number" min="0" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;" />
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label style="font-weight:bold; color:#2C3E50;">Hourly Rate</label>
+            <input type="number" min="0" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;" />
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label style="font-weight:bold; color:#2C3E50;">Supporting Documents</label>
+            <input type="file" multiple style="width:100%; padding:5px; margin-top:5px;" />
+        </div>
+
+        <button type="submit"
+                style="padding:10px 20px; background-color:#D67F2B; color:white; border:none; border-radius:6px; cursor:pointer; transition:background-color 0.3s;"
+                onmouseover="this.style.backgroundColor='#B76A1F'" onmouseout="this.style.backgroundColor='#D67F2B'">
+            Submit Claim
+        </button>
+    </form>
+</div>

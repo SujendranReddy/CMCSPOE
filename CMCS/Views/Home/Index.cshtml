@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Login - CMCS";
+}
+
+<div style="background-color:#F5F5F5; min-height:100vh; display:flex; justify-content:center; align-items:center; font-family: Arial, sans-serif;">
+    <div style="max-width:400px; width:100%; padding:30px; background-color:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <h2 style="text-align:center; color:#2C3E50; margin-bottom:25px;">Login to CMCS</h2>
+
+        <form method="post">
+            <div style="margin-bottom:15px;">
+                <label for="username" style="font-weight:bold; color:#2C3E50;">Username</label>
+                <input type="text" name="username" id="username" required style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc; font-size:14px;" />
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label for="password" style="font-weight:bold; color:#2C3E50;">Password</label>
+                <input type="password" name="password" id="password" required style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc; font-size:14px;" />
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label for="role" style="font-weight:bold; color:#2C3E50;">Select Role</label>
+                <select name="role" id="role" required style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc; font-size:14px;">
+                    <option value="">--Select Role--</option>
+                    <option value="Lecturer">Lecturer</option>
+                    <option value="Coordinator">Programme Coordinator</option>
+                    <option value="Manager">Academic Manager</option>
+                </select>
+            </div>
+
+            <button type="submit" style="width:100%; padding:10px; background-color:#6C3483; border:none; border-radius:6px; color:#fff; font-size:16px; cursor:pointer; transition:background-color 0.3s;">
+                Login
+            </button>
+
+            @if (ViewBag.Error != null)
+            {
+                <p style="color:#C0392B; text-align:center; margin-top:10px;">@ViewBag.Error</p>
+            }
+        </form>
+    </div>
+</div>

@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Claim Details";
+    var claim = ViewBag.Claim;
+}
+
+<div style="font-family: Arial, sans-serif; padding:30px; background-color:#F5F5F5; min-height:100vh;">
+    <h2 style="color:#2C3E50; margin-bottom:20px;">Claim Details - @claim.Month</h2>
+
+    <div style="max-width:500px; background-color:white; padding:20px; border-radius:12px;">
+        <p><strong>Claim Month:</strong> @claim.Month</p>
+        <p><strong>Hours Worked:</strong> @claim.HoursWorked</p>
+        <p><strong>Hourly Rate:</strong> @claim.HourlyRate</p>
+        <p>
+            <strong>Status:</strong>
+            <span style="color:@(claim.Status == "Approved" ? "#4CAF50" : claim.Status == "Rejected" ? "#C0392B" : "#D67F2B"); font-weight:bold;">
+                @claim.Status
+            </span>
+        </p>
+        <p><strong>Submitted On:</strong> @claim.SubmittedOn</p>
+        <p><strong>Approved By:</strong> @claim.ApprovedBy</p>
+
+        <div>
+            <strong>Supporting Documents:</strong>
+            <ul>
+                @foreach (var doc in claim.Documents)
+                {
+                    <li>@doc</li>
+                }
+            </ul>
+        </div>
+
+        <a href="/Manager/Dashboard"
+           style="display:inline-block; margin-top:15px; padding:10px 20px; background-color:#D67F2B; color:white; text-decoration:none; border-radius:6px; transition:background-color 0.3s;"
+           onmouseover="this.style.backgroundColor='#B76A1F'" onmouseout="this.style.backgroundColor='#D67F2B'">
+            Back to Dashboard
+        </a>
+    </div>
+</div>

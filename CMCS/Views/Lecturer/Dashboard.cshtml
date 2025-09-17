@@ -1,0 +1,48 @@
+﻿@{
+    ViewData["Title"] = "Lecturer Dashboard";
+    var claims = ViewBag.Claims;
+}
+
+<div style="font-family: Arial, sans-serif; padding: 30px; background-color:#F5F5F5; min-height:100vh;">
+    <h2 style="color:#2C3E50; margin-bottom:20px;">Welcome, Lecturer</h2>
+
+    <div style="margin-bottom:30px;">
+        <a href="/Lecturer/SubmitClaim" 
+           style="padding:10px 20px; background-color:#D67F2B; color:white; text-decoration:none; border-radius:6px; transition:background-color 0.3s;"
+           onmouseover="this.style.backgroundColor='#B76A1F'" onmouseout="this.style.backgroundColor='#D67F2B'">
+           Submit New Claim
+        </a>
+    </div>
+
+    <h3 style="color:#2C3E50; margin-bottom:10px;">Your Claims</h3>
+    <table style="width:100%; border-collapse:collapse; background-color:white; border-radius:8px; overflow:hidden;">
+        <thead>
+            <tr style="background-color:#2C3E50; color:white; text-align:left;">
+                <th style="padding:10px;">Month</th>
+                <th style="padding:10px;">Hours Worked</th>
+                <th style="padding:10px;">Hourly Rate</th>
+                <th style="padding:10px;">Status</th>
+                <th style="padding:10px;">Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var claim in claims)
+            {
+                var statusColor = claim.Status == "Approved" ? "#4CAF50" : claim.Status == "Rejected" ? "#C0392B" : "#D67F2B"; 
+                <tr style="border-bottom:1px solid #ccc;">
+                    <td style="padding:10px;">@claim.Month</td>
+                    <td style="padding:10px;">@claim.HoursWorked</td>
+                    <td style="padding:10px;">@claim.HourlyRate</td>
+                    <td style="padding:10px; color:white; font-weight:bold; background-color:@statusColor; text-align:center;">@claim.Status</td>
+                    <td style="padding:10px;">
+                        <a href="/Lecturer/ClaimDetails?month=@claim.Month" 
+                           style="padding:6px 12px; background-color:#D67F2B; color:white; text-decoration:none; border-radius:6px; transition:background-color 0.3s;"
+                           onmouseover="this.style.backgroundColor='#B76A1F'" onmouseout="this.style.backgroundColor='#D67F2B'">
+                           Details
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
