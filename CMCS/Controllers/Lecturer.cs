@@ -25,6 +25,7 @@ namespace CMCS.Controllers
         {
             var claim = new
             {
+                ClaimID = 57,
                 Month = month,
                 HoursWorked = 40,
                 HourlyRate = 500,
