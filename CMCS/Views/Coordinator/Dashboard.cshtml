@@ -1,59 +1,72 @@
 ﻿@{
-    ViewData["Title"] = "Coordinator Dashboard";
-    var claims = ViewBag.Claims;
+    // set the page title and get claims from viewbag
+    ViewData["Title"] = "Coordinator Dashboard"; var claims = ViewBag.Claims;
 }
 
-<div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; padding: 30px; background-color:#F5F5F5; min-height:100vh;">
-    <h2 style="color:#1F3B6B; margin-bottom:20px; font-size:32px; font-weight:600;">
-        Programme Coordinator Dashboard
+<div style="font-family: 'segoe ui', helvetica, arial, sans-serif; padding: 30px; background-color:#f5f5f5; min-height:100vh;">
+    <!-- main heading for the dashboard -->
+    <h2 style="color:#1f3b6b; margin-bottom:20px; font-size:32px; font-weight:600;">
+        programme coordinator dashboard
     </h2>
 
-    <h3 style="color:#1F3B6B; margin-bottom:15px; font-size:20px; font-weight:500; text-transform:uppercase; letter-spacing:1px;">
-        Submitted Claims
+    <!-- heading for the submitted claims section -->
+    <h3 style="color:#1f3b6b; margin-bottom:15px; font-size:20px; font-weight:500; text-transform:uppercase; letter-spacing:1px;">
+        submitted claims
     </h3>
 
-    <!-- Search Filter -->
+    <!-- simple search input styled to look nicer and for usability -->
     <div style="margin-bottom:20px; max-width:400px;">
-        <input type="text" id="searchInput" placeholder="Search by Status, Lecturer, or Month..."
+        <input type="text" id="searchInput" placeholder="search by status, lecturer, or month..."
                style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:14px;
                       outline:none; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s;">
     </div>
 
+    <!-- table to display claims with some styling and rounded corners -->
     <table id="claimsTable" style="width:100%; border-collapse:collapse; background-color:white; border-radius:8px; overflow:hidden;">
         <thead>
-            <tr style="background-color:#2A5298; color:white; text-align:left; text-transform:uppercase; letter-spacing:0.5px;">
-                <th style="padding:10px;">Month</th>
-                <th style="padding:10px;">Lecturer</th>
-                <th style="padding:10px;">Hours Worked</th>
-                <th style="padding:10px;">Hourly Rate</th>
-                <th style="padding:10px;">Status</th>
-                <th style="padding:10px;">Actions</th>
+            <tr style="background-color:#2a5298; color:white; text-align:left; text-transform:uppercase; letter-spacing:0.5px;">
+                <!-- table headers -->
+                <th style="padding:10px;">month</th>
+                <th style="padding:10px;">lecturer</th>
+                <th style="padding:10px;">hours worked</th>
+                <th style="padding:10px;">hourly rate</th>
+                <th style="padding:10px;">status</th>
+                <th style="padding:10px;">actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var claim in claims)
             {
+                // pick a color for the status based on approved, rejected or pending
                 var statusColor = claim.Status == "Approved" ? "#4CAF50" : claim.Status == "Rejected" ? "#C0392B" : "#D67F2B";
                 <tr style="border-bottom:1px solid #ccc;">
+                    <!-- show claim details in each cell -->
                     <td style="padding:10px;">@claim.Month</td>
                     <td style="padding:10px;">@claim.Lecturer</td>
                     <td style="padding:10px;">@claim.HoursWorked</td>
                     <td style="padding:10px;">@claim.HourlyRate</td>
-                    <td style="padding:10px; color:white; font-weight:bold; background-color:@statusColor; text-align:center;">@claim.Status</td>
+                    <td style="padding:10px; color:white; font-weight:bold; background-color:@statusColor; text-align:center;">
+                        @claim.Status
+                    </td>
+                    <!-- action buttons for each claim row -->
                     <td style="padding:10px;">
+                        <!-- link to see claim details -->
                         <a href="/Coordinator/ClaimDetails?month=@claim.Month"
-                           style="padding:6px 12px; background-color:#2A5298; color:white; text-decoration:none; border-radius:6px; margin-right:5px; transition:background-color 0.3s;"
-                           onmouseover="this.style.backgroundColor='#1D4075'" onmouseout="this.style.backgroundColor='#2A5298'">
-                            Details
+                           style="padding:6px 12px; background-color:#2a5298; color:white; text-decoration:none; border-radius:6px; margin-right:5px; transition:background-color 0.3s;"
+                           onmouseover="this.style.backgroundColor='#1d4075'" onmouseout="this.style.backgroundColor='#2a5298'">
+                            details
                         </a>
-                        <button style="padding:6px 12px; background-color:#D67F2B; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:5px;">
-                            Verify
+                        <!-- button to verify the claim -->
+                        <button style="padding:6px 12px; background-color:#d67f2b; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:5px;">
+                            verify
                         </button>
+                        <!-- button to approve the claim -->
                         <button style="padding:6px 12px; background-color:#4CAF50; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:5px;">
-                            Approve
+                            approve
                         </button>
+                        <!-- button to reject the claim -->
                         <button style="padding:6px 12px; background-color:#C0392B; color:white; border:none; border-radius:6px; cursor:pointer;">
-                            Reject
+                            reject
                         </button>
                     </td>
                 </tr>
@@ -61,21 +74,3 @@
         </tbody>
     </table>
 </div>
-
-<script>
-    const searchInput = document.getElementById('searchInput');
-    const table = document.getElementById('claimsTable');
-    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
-    searchInput.addEventListener('keyup', function() {
-        const filter = this.value.toLowerCase();
-        for (let i = 0; i < rows.length; i++) {
-            const month = rows[i].cells[0].textContent.toLowerCase();
-            const lecturer = rows[i].cells[1].textContent.toLowerCase();
-            const status = rows[i].cells[4].textContent.toLowerCase(); // Status column
-
-            rows[i].style.display = (month.includes(filter) || lecturer.includes(filter) || status.includes(filter)) ? '' : 'none';
-        }
-    });
-</script>
-

@@ -2,7 +2,7 @@
     ViewData["Title"] = "Manager Dashboard";
     var claims = ViewBag.Claims;
 }
-
+<!--identical to coordinator dashboard-->
 <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; padding: 30px; background-color:#F5F5F5; min-height:100vh;">
     <h2 style="color:#1F3B6B; margin-bottom:20px; font-size:32px; font-weight:600;">
         Academic Manager Dashboard
@@ -12,7 +12,6 @@
         Submitted Claims
     </h3>
 
-    <!-- Search Filter -->
     <div style="margin-bottom:20px; max-width:400px;">
         <input type="text" id="searchInput" placeholder="Search by Status, Lecturer, or Month..."
                style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:14px;
@@ -62,19 +61,3 @@
     </table>
 </div>
 
-<script>
-    const searchInput = document.getElementById('searchInput');
-    const table = document.getElementById('claimsTable');
-    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
-    searchInput.addEventListener('keyup', function() {
-        const filter = this.value.toLowerCase();
-        for (let i = 0; i < rows.length; i++) {
-            const month = rows[i].cells[0].textContent.toLowerCase();
-            const lecturer = rows[i].cells[1].textContent.toLowerCase();
-            const status = rows[i].cells[4].textContent.toLowerCase(); // Status column
-
-            rows[i].style.display = (month.includes(filter) || lecturer.includes(filter) || status.includes(filter)) ? '' : 'none';
-        }
-    });
-</script>

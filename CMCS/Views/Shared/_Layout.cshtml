@@ -4,29 +4,28 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Contract Monthly Claim System</title>
-    <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CMCS.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav style="display:flex; justify-content:space-between; align-items:center; background-color:#2C3E50; padding:10px 30px; color:white;">
-            <div></div>
-            <div style="font-size:28px; font-weight:300; text-align:center;">
-                Contract Monthly Claim System
-            </div>
-            <div>
+        <nav style="position:relative; display:flex; align-items:center; background-color:#2C3E50; padding:10px 30px; color:white;">
+            <div style="margin-left:auto;">
                 <a href="/"
                    style="color:white; text-decoration:none; padding:6px 12px; border-radius:6px; background-color:#C0392B; transition:background-color 0.3s;"
                    onmouseover="this.style.backgroundColor='#992222'" onmouseout="this.style.backgroundColor='#C0392B'">
                     Sign Out
                 </a>
             </div>
+            <div style="position:absolute; left:50%; transform:translateX(-50%); font-size:28px; font-weight:300; text-align:center;">
+                Contract Monthly Claim System
+            </div>
         </nav>
     </header>
+
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
@@ -36,6 +35,7 @@
             &copy; 2025 - CMCS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

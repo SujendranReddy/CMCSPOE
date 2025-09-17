@@ -6,7 +6,7 @@ namespace CMCS.Controllers
     {
         public IActionResult Dashboard()
         {
-            // Mock data for claims
+            // Identical to Coordinator controller
             var claims = new[]
             {
                 new { Month = "July 2025", Lecturer = "John Doe", HoursWorked = 40, HourlyRate = 500, Status = "Pending" },

@@ -1,11 +1,10 @@
 ﻿@{
     ViewData["Title"] = "Login - CMCS";
 }
-
+<!--the buttons  direct the user their role-based interface->
 <div style="background-color:#F5F5F5; min-height:100vh; display:flex; justify-content:center; align-items:center; font-family: Arial, sans-serif;">
     <div style="max-width:400px; width:100%; padding:30px; background-color:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); text-align:center;">
         <h2 style="color:#2C3E50; margin-bottom:25px; font-weight:600;">Login to CMCS</h2>
-
         <form method="get">
             <button type="submit" formaction="@Url.Action("Dashboard", "Lecturer")"
                     style="width:100%; padding:12px; margin-bottom:12px; background-color:#27AE60; border:none; border-radius:6px; color:#fff; font-size:16px; cursor:pointer;">

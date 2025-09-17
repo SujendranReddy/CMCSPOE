@@ -4,7 +4,7 @@ namespace CMCS.Controllers
 {
     public class LecturerController : Controller
     {
-
+        //Idententical to other controllers
         public IActionResult Dashboard()
         {
             var claims = new[]
@@ -16,7 +16,7 @@ namespace CMCS.Controllers
             ViewBag.Claims = claims;
             return View();
         }
-
+        // This is for directing the user to submitclaim page when they click the button 
         public IActionResult SubmitClaim()
         {
             return View();
