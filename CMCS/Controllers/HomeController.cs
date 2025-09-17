@@ -18,22 +18,6 @@ namespace CMCS.Controllers
             return View();
         }
 
-        public IActionResult Login(string username, string role)
-        {
-            switch (role)
-            {
-                case "Lecturer":
-                    return RedirectToAction("Dashboard", "Lecturer");
-                case "Coordinator":
-                    return RedirectToAction("Dashboard", "Coordinator");
-                case "Manager":
-                    return RedirectToAction("Dashboard", "Manager");
-                default:
-                    ViewBag.Error = "Please select a valid role.";
-                    return View();
-            }
-        }
-
         public IActionResult Privacy()
         {
             return View();

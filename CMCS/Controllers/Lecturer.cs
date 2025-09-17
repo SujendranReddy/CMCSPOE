@@ -4,6 +4,7 @@ namespace CMCS.Controllers
 {
     public class LecturerController : Controller
     {
+
         public IActionResult Dashboard()
         {
             var claims = new[]
