@@ -69,7 +69,11 @@ namespace CMCS.Controllers
         }
 
         [HttpGet]
-        public IActionResult SubmitClaim() => View();
+        public IActionResult SubmitClaim()
+        {
+            return View();
+        }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

@@ -219,7 +219,6 @@ namespace CMCS.Data
             {
                 ClaimID = src.ClaimID,
                 Month = src.Month,
-                Lecturer = src.Lecturer,
                 HoursWorked = src.HoursWorked,
                 HourlyRate = src.HourlyRate,
                 VerificationStatus = src.VerificationStatus,

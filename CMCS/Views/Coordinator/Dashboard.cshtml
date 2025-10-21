@@ -1,76 +1,148 @@
-﻿@{
-    // set the page title and get claims from viewbag
-    ViewData["Title"] = "Coordinator Dashboard"; var claims = ViewBag.Claims;
+﻿@using CMCS.Models
+@{
+    ViewData["Title"] = "Coordinator Dashboard";
+    var claims = ViewBag.Claims as List<Claim>;
 }
 
-<div style="font-family: 'segoe ui', helvetica, arial, sans-serif; padding: 30px; background-color:#f5f5f5; min-height:100vh;">
-    <!-- main heading for the dashboard -->
-    <h2 style="color:#1f3b6b; margin-bottom:20px; font-size:32px; font-weight:600;">
-        Programme Coordinator Dashboard
-    </h2>
+<div style="font-family:'Segoe UI'; padding:40px; background-color:#F5F5F5; min-height:100vh;">
+    <h2 style="color:#1F3B6B; margin-bottom:25px; font-size:28px;">Programme Coordinator Dashboard</h2>
 
-    <!-- heading for the submitted claims section -->
-    <h3 style="color:#1f3b6b; margin-bottom:15px; font-size:20px; font-weight:500; text-transform:uppercase; letter-spacing:1px;">
-        submitted claims
-    </h3>
-
-    <!-- simple search input styled to look nicer and for usability -->
+    <!-- Search bar -->
     <div style="margin-bottom:20px; max-width:400px;">
-        <input type="text" id="searchInput" placeholder="search by status, lecturer, or month..."
+        <input type="text" id="searchInput" placeholder="Search by Month, Submitted By, or Verification..."
                style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:14px;
                       outline:none; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s;">
     </div>
 
-    <!-- table to display claims with some styling and rounded corners -->
-    <table id="claimsTable" style="width:100%; border-collapse:collapse; background-color:white; border-radius:8px; overflow:hidden;">
-        <thead>
-            <tr style="background-color:#2a5298; color:white; text-align:left; text-transform:uppercase; letter-spacing:0.5px;">
-                <!-- table headers -->
-                <th style="padding:10px;">month</th>
-                <th style="padding:10px;">lecturer</th>
-                <th style="padding:10px;">hours worked</th>
-                <th style="padding:10px;">hourly rate</th>
-                <th style="padding:10px;">status</th>
-                <th style="padding:10px;">actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var claim in claims)
-            {
-                // pick a color for the status based on approved, rejected or pending
-                var statusColor = claim.Status == "Approved" ? "#4CAF50" : claim.Status == "Rejected" ? "#C0392B" : "#D67F2B";
-                <tr style="border-bottom:1px solid #ccc;">
-                    <!-- show claim details in each cell -->
-                    <td style="padding:10px;">@claim.Month</td>
-                    <td style="padding:10px;">@claim.Lecturer</td>
-                    <td style="padding:10px;">@claim.HoursWorked</td>
-                    <td style="padding:10px;">@claim.HourlyRate</td>
-                    <td style="padding:10px; color:white; font-weight:bold; background-color:@statusColor; text-align:center;">
-                        @claim.Status
-                    </td>
-                    <!-- action buttons for each claim row -->
-                    <td style="padding:10px;">
-                        <!-- link to see claim details -->
-                        <a href="/Coordinator/ClaimDetails?month=@claim.Month"
-                           style="padding:6px 12px; background-color:#2a5298; color:white; text-decoration:none; border-radius:6px; margin-right:5px; transition:background-color 0.3s;"
-                           onmouseover="this.style.backgroundColor='#1d4075'" onmouseout="this.style.backgroundColor='#2a5298'">
-                            Details
-                        </a>
-                        <!-- button to verify the claim -->
-                        <button style="padding:6px 12px; background-color:#d67f2b; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:5px;">
-                            Verify
-                        </button>
-                        <!-- button to approve the claim -->
-                        <button style="padding:6px 12px; background-color:#4CAF50; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:5px;">
-                            Approve
-                        </button>
-                        <!-- button to reject the claim -->
-                        <button style="padding:6px 12px; background-color:#C0392B; color:white; border:none; border-radius:6px; cursor:pointer;">
-                            Reject
-                        </button>
-                    </td>
+    <div style="overflow-x:auto; background:white; border-radius:8px; padding:10px;">
+        <table id="claimsTable" style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background-color:#2A5298; color:white; text-align:left;">
+                    <th style="padding:14px;">Month</th>
+                    <th style="padding:14px;">Submitted By</th>
+                    <th style="padding:14px;">Hours</th>
+                    <th style="padding:14px;">Rate</th>
+                    <th style="padding:14px;">Verification</th>
+                    <th style="padding:14px;">Approval</th>
+                    <th style="padding:14px;">Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var claim in claims)
+                {
+                    <tr style="border-bottom:1px solid #ddd;">
+                        <td style="padding:12px;">@claim.Month</td>
+                        <td style="padding:12px;">@claim.SubmittedBy</td>
+                        <td style="padding:12px;">@claim.HoursWorked</td>
+                        <td style="padding:12px;">@claim.HourlyRate</td>
+
+                        <td style="padding:10px;
+                               color:white;
+                               font-weight:bold;
+                               background-color:@(
+                            claim.VerificationStatus == ClaimVerificationStatus.Pending ? "#D67F2B" :
+                            claim.VerificationStatus == ClaimVerificationStatus.Verified ? "#4CAF50" :
+                            claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B" :
+                            "#999"
+                                                                                                                                                                                                                                                );
+                               text-align:center;">
+                            @claim.VerificationStatus
+                        </td>
+
+                        <td style="padding:10px;
+                               color:white;
+                               font-weight:bold;
+                               background-color:@(
+                            claim.ApprovalStatus == ClaimApprovalStatus.Approved ? "#4CAF50" :
+                            claim.ApprovalStatus == ClaimApprovalStatus.Rejected ? "#C0392B" :
+                            "#D67F2B"
+                                                                                                                                                                                                                                                );
+                               text-align:center;">
+                            @claim.ApprovalStatus
+                        </td>
+
+                        <td style="padding:12px;">
+                            <a href="/Coordinator/ClaimDetails?claimId=@claim.ClaimID"
+                               style="padding:8px 14px; background-color:#2A5298; color:white; text-decoration:none; border-radius:6px; margin-right:6px;">
+                                Details
+                            </a>
+
+                            @if (claim.VerificationStatus == ClaimVerificationStatus.Pending)
+                            {
+                                <button type="button"
+                                        onclick="openNamePopup(@claim.ClaimID)"
+                                        style="padding:8px 14px; background-color:#D67F2B; color:white; border:none; border-radius:6px; cursor:pointer;">
+                                    Verify
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<!-- Modal popup for entering name -->
+<div id="namePopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.4); justify-content:center; align-items:center;">
+    <div style="background:white; padding:25px; border-radius:10px; width:320px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.2);">
+        <h3 style="color:#1F3B6B; margin-bottom:15px;">Verify Claim</h3>
+        <p style="margin-bottom:10px;">Enter your full name to verify this claim:</p>
+        <input type="text" id="verifierName" placeholder="Your name"
+               style="width:90%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-bottom:15px;" />
+        <div>
+            <button onclick="submitVerification()" style="background-color:#2A5298; color:white; border:none; padding:8px 14px; border-radius:6px; margin-right:8px;">Submit</button>
+            <button onclick="closeNamePopup()" style="background-color:#C0392B; color:white; border:none; padding:8px 14px; border-radius:6px;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<form id="verifyForm" method="post" asp-action="VerifyClaim" asp-controller="Coordinator" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="claimId" id="hiddenClaimId" />
+    <input type="hidden" name="verifiedBy" id="hiddenVerifiedBy" />
+</form>
+
+<script>
+    let currentClaimId = null;
+
+    function openNamePopup(claimId) {
+        currentClaimId = claimId;
+        document.getElementById('namePopup').style.display = 'flex';
+    }
+
+    function closeNamePopup() {
+        document.getElementById('namePopup').style.display = 'none';
+        document.getElementById('verifierName').value = '';
+    }
+
+    function submitVerification() {
+        const name = document.getElementById('verifierName').value.trim();
+        if (!name) {
+            alert("Please enter your name before submitting.");
+            return;
+        }
+
+        document.getElementById('hiddenClaimId').value = currentClaimId;
+        document.getElementById('hiddenVerifiedBy').value = name;
+        document.getElementById('verifyForm').submit();
+    }
+
+    // ====== SEARCH BAR FUNCTIONALITY ======
+    const searchInput = document.getElementById("searchInput");
+    const claimsTable = document.getElementById("claimsTable");
+    const rows = claimsTable.querySelectorAll("tbody tr");
+
+    searchInput.addEventListener("input", function () {
+        const filter = searchInput.value.toLowerCase();
+
+        rows.forEach(row => {
+            const month = row.cells[0].textContent.toLowerCase();
+            const submittedBy = row.cells[1].textContent.toLowerCase();
+            const verification = row.cells[4].textContent.toLowerCase();
+
+            row.style.display = (month.includes(filter) || submittedBy.includes(filter) || verification.includes(filter)) ? "" : "none";
+        });
+    });
+</script>

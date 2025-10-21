@@ -1,63 +1,154 @@
-﻿@{
+﻿@using CMCS.Models
+@{
     ViewData["Title"] = "Manager Dashboard";
-    var claims = ViewBag.Claims;
+    var claims = ViewBag.Claims as List<Claim>;
 }
-<!--identical to coordinator dashboard-->
-<div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; padding: 30px; background-color:#F5F5F5; min-height:100vh;">
-    <h2 style="color:#1F3B6B; margin-bottom:20px; font-size:32px; font-weight:600;">
-        Academic Manager Dashboard
-    </h2>
 
-    <h3 style="color:#1F3B6B; margin-bottom:15px; font-size:20px; font-weight:500; text-transform:uppercase; letter-spacing:1px;">
-        Submitted Claims
-    </h3>
+<div style="font-family:'Segoe UI'; padding:40px; background-color:#F5F5F5; min-height:100vh;">
+    <h2 style="color:#1F3B6B; margin-bottom:25px; font-size:28px;">Academic Manager Dashboard</h2>
 
+    <!-- Search bar -->
     <div style="margin-bottom:20px; max-width:400px;">
-        <input type="text" id="searchInput" placeholder="Search by Status, Lecturer, or Month..."
+        <input type="text" id="searchInput" placeholder="Search by Month, Submitted By, or Approval..."
                style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:14px;
                       outline:none; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s;">
     </div>
 
-    <table id="claimsTable" style="width:100%; border-collapse:collapse; background-color:white; border-radius:8px; overflow:hidden;">
-        <thead>
-            <tr style="background-color:#2A5298; color:white; text-align:left; text-transform:uppercase; letter-spacing:0.5px;">
-                <th style="padding:10px;">Month</th>
-                <th style="padding:10px;">Lecturer</th>
-                <th style="padding:10px;">Hours Worked</th>
-                <th style="padding:10px;">Hourly Rate</th>
-                <th style="padding:10px;">Status</th>
-                <th style="padding:10px;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var claim in claims)
-            {
-                var statusColor = claim.Status == "Approved" ? "#4CAF50" : claim.Status == "Rejected" ? "#C0392B" : "#D67F2B";
-                <tr style="border-bottom:1px solid #ccc;">
-                    <td style="padding:10px;">@claim.Month</td>
-                    <td style="padding:10px;">@claim.Lecturer</td>
-                    <td style="padding:10px;">@claim.HoursWorked</td>
-                    <td style="padding:10px;">@claim.HourlyRate</td>
-                    <td style="padding:10px; color:white; font-weight:bold; background-color:@statusColor; text-align:center;">@claim.Status</td>
-                    <td style="padding:10px;">
-                        <a href="/Coordinator/ClaimDetails?month=@claim.Month"
-                           style="padding:6px 12px; background-color:#2a5298; color:white; text-decoration:none; border-radius:6px; margin-right:5px; transition:background-color 0.3s;"
-                           onmouseover="this.style.backgroundColor='#1d4075'" onmouseout="this.style.backgroundColor='#2a5298'">
-                            Details
-                        </a>
-                        <button style="padding:6px 12px; background-color:#d67f2b; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:5px;">
-                            Verify
-                        </button>
-                        <button style="padding:6px 12px; background-color:#4CAF50; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:5px;">
-                            Approve
-                        </button>
-                        <button style="padding:6px 12px; background-color:#C0392B; color:white; border:none; border-radius:6px; cursor:pointer;">
-                            Reject
-                        </button>
-                    </td>
+    <div style="overflow-x:auto; background:white; border-radius:8px; padding:10px;">
+        <table id="claimsTable" style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background-color:#2A5298; color:white; text-align:left;">
+                    <th style="padding:14px;">Month</th>
+                    <th style="padding:14px;">Submitted By</th>
+                    <th style="padding:14px;">Hours</th>
+                    <th style="padding:14px;">Rate</th>
+                    <th style="padding:14px;">Verification</th>
+                    <th style="padding:14px;">Approval</th>
+                    <th style="padding:14px;">Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var claim in claims)
+                {
+                    <tr style="border-bottom:1px solid #ddd;">
+                        <td style="padding:12px;">@claim.Month</td>
+                        <td style="padding:12px;">@claim.SubmittedBy</td>
+                        <td style="padding:12px;">@claim.HoursWorked</td>
+                        <td style="padding:12px;">@claim.HourlyRate</td>
+
+                        <td style="padding:10px; color:white; font-weight:bold; text-align:center;
+                                        background-color:@(
+                            claim.VerificationStatus == ClaimVerificationStatus.Pending ? "#D67F2B" :
+                            claim.VerificationStatus == ClaimVerificationStatus.Verified ? "#4CAF50" :
+                            claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B" : "#D67F2B"
+                                                                                                                                                                                                                                ); ">
+                        @claim.VerificationStatus
+                    </td>
+
+                        <td style="padding:10px; color:white; font-weight:bold; text-align:center;
+                                        background-color:@(
+                                                    claim.ApprovalStatus == ClaimApprovalStatus.Pending ? "#D67F2B" :
+                                                    claim.ApprovalStatus == ClaimApprovalStatus.Approved ? "#4CAF50" :
+                                                    claim.ApprovalStatus == ClaimApprovalStatus.Rejected ? "#C0392B" : "#D67F2B"
+                                                                                                                                                                                                                                ); ">
+                        @claim.ApprovalStatus
+                    </td>
+
+                        <td style="padding:12px;">
+                            <a href="/Manager/ClaimDetails?claimId=@claim.ClaimID"
+                               style="padding:8px 14px; background-color:#2A5298; color:white; text-decoration:none; border-radius:6px; margin-right:6px;">
+                                Details
+                            </a>
+
+                        @if (claim.ApprovalStatus == ClaimApprovalStatus.Pending)
+                            {
+                                <button type="button"
+                                        onclick="openNamePopup(@claim.ClaimID, 'Approved')"
+                                        style="padding:8px 14px; background-color:#4CAF50; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:6px;">
+                                    Approve
+                                </button>
+
+                                <button type="button"
+                                        onclick="openNamePopup(@claim.ClaimID, 'Rejected')"
+                                        style="padding:8px 14px; background-color:#C0392B; color:white; border:none; border-radius:6px; cursor:pointer;">
+                                    Reject
+                                </button>
+                            }
+                            else
+                            {
+                                <span style="color:#555;">Finalized</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
+<div id="namePopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.4); justify-content:center; align-items:center;">
+    <div style="background:white; padding:25px; border-radius:10px; width:320px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.2);">
+        <h3 style="color:#1F3B6B; margin-bottom:15px;">Finalize Claim</h3>
+        <p style="margin-bottom:10px;">Enter your full name to finalize this claim:</p>
+        <input type="text" id="managerName" placeholder="Your name"
+               style="width:90%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-bottom:15px;" />
+        <div>
+            <button onclick="submitFinalize()" style="background-color:#2A5298; color:white; border:none; padding:8px 14px; border-radius:6px; margin-right:8px;">Submit</button>
+            <button onclick="closeNamePopup()" style="background-color:#C0392B; color:white; border:none; padding:8px 14px; border-radius:6px;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<form id="finalizeForm" method="post" asp-action="FinalizeClaim" asp-controller="Manager" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="claimId" id="hiddenClaimId" />
+    <input type="hidden" name="status" id="hiddenStatus" />
+    <input type="hidden" name="approvedBy" id="hiddenApprovedBy" />
+</form>
+
+<script>
+    let currentClaimId = null;
+    let currentStatus = null;
+
+    function openNamePopup(claimId, status) {
+        currentClaimId = claimId;
+        currentStatus = status;
+        document.getElementById('namePopup').style.display = 'flex';
+    }
+
+    function closeNamePopup() {
+        document.getElementById('namePopup').style.display = 'none';
+        document.getElementById('managerName').value = '';
+    }
+
+    function submitFinalize() {
+        const name = document.getElementById('managerName').value.trim();
+        if (!name) {
+            alert("Please enter your name before submitting.");
+            return;
+        }
+
+        document.getElementById('hiddenClaimId').value = currentClaimId;
+        document.getElementById('hiddenStatus').value = currentStatus;
+        document.getElementById('hiddenApprovedBy').value = name;
+        document.getElementById('finalizeForm').submit();
+    }
+
+    // ====== SEARCH BAR FUNCTIONALITY ======
+    const searchInput = document.getElementById("searchInput");
+    const claimsTable = document.getElementById("claimsTable");
+    const rows = claimsTable.querySelectorAll("tbody tr");
+
+    searchInput.addEventListener("input", function () {
+        const filter = searchInput.value.toLowerCase();
+
+        rows.forEach(row => {
+            const month = row.cells[0].textContent.toLowerCase();
+            const submittedBy = row.cells[1].textContent.toLowerCase();
+            const approval = row.cells[5].textContent.toLowerCase();
+
+            row.style.display = (month.includes(filter) || submittedBy.includes(filter) || approval.includes(filter)) ? "" : "none";
+        });
+    });
+</script>

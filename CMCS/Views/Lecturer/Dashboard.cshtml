@@ -1,13 +1,13 @@
-﻿@{
+﻿@using CMCS.Models
+@{
     ViewData["Title"] = "Lecturer Dashboard";
     var claims = ViewBag.Claims;
 }
-<!--Basically identical to the other dashboards-->
+
 <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; padding: 30px; background-color:#F5F5F5; min-height:100vh;">
     <h2 style="color:#2C3E50; margin-bottom:20px; font-size:32px; font-weight:600;">
         Lecturer Dashboard
     </h2>
-    <!--button to submit new claim-->
     <div style="margin-bottom:30px;">
         <a href="/Lecturer/SubmitClaim"
            style="padding:10px 20px; background-color:#D67F2B; color:white; text-decoration:none; border-radius:6px; transition:background-color 0.3s;"
@@ -21,32 +21,51 @@
     </h3>
 
     <div style="margin-bottom:20px; max-width:400px;">
-        <input type="text" id="searchInput" placeholder="Search by Status or Month..."
+        <input type="text" id="searchInput" placeholder="Search by Month, Verification, or Approval..."
                style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:14px;
                       outline:none; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s;">
     </div>
 
-    <table style="width:100%; border-collapse:collapse; background-color:white; border-radius:8px; overflow:hidden;">
+    <table id="claimsTable" style="width:100%; border-collapse:collapse; background-color:white; border-radius:8px; overflow:hidden;">
         <thead>
             <tr style="background-color:#2C3E50; color:white; text-align:left; text-transform:uppercase; letter-spacing:0.5px;">
                 <th style="padding:10px;">Month</th>
                 <th style="padding:10px;">Hours Worked</th>
                 <th style="padding:10px;">Hourly Rate</th>
-                <th style="padding:10px;">Status</th>
+                <th style="padding:10px;">Submitted By</th>
+                <th style="padding:10px;">Verification</th>
+                <th style="padding:10px;">Approval</th>
                 <th style="padding:10px;">Details</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var claim in claims)
             {
-                var statusColor = claim.Status == "Approved" ? "#4CAF50" : claim.Status == "Rejected" ? "#C0392B" : "#D67F2B";
+                var verificationColor = claim.VerificationStatus == ClaimVerificationStatus.Verified ? "#4CAF50"
+                : claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B"
+                : "#D67F2B";
+
+                var approvalColor = claim.ApprovalStatus == ClaimApprovalStatus.Approved ? "#4CAF50"
+                : claim.ApprovalStatus == ClaimApprovalStatus.Rejected ? "#C0392B"
+                : "#D67F2B";
+
                 <tr style="border-bottom:1px solid #ccc;">
                     <td style="padding:10px;">@claim.Month</td>
                     <td style="padding:10px;">@claim.HoursWorked</td>
                     <td style="padding:10px;">@claim.HourlyRate</td>
-                    <td style="padding:10px; color:white; font-weight:bold; background-color:@statusColor; text-align:center;">@claim.Status</td>
+                    <td style="padding:10px;">@claim.SubmittedBy</td>
+
+                    <td style="padding:10px; color:white; font-weight:bold; background-color:@verificationColor; text-align:center;">
+                        @claim.VerificationStatus
+                    </td>
+
+                    <td style="padding:10px; color:white; font-weight:bold; background-color:@approvalColor; text-align:center;">
+                        @claim.ApprovalStatus
+                    </td>
+
                     <td style="padding:10px;">
-                        <a href="/Lecturer/ClaimDetails?month=@claim.Month"
+                        <a asp-controller="Lecturer" asp-action="ClaimDetails"
+                           asp-route-claimId="@claim.ClaimID"
                            style="padding:6px 12px; background-color:#D67F2B; color:white; text-decoration:none; border-radius:6px; transition:background-color 0.3s;"
                            onmouseover="this.style.backgroundColor='#B76A1F'" onmouseout="this.style.backgroundColor='#D67F2B'">
                             Details
@@ -58,3 +77,20 @@
     </table>
 </div>
 
+<script>
+    const input = document.getElementById("searchInput");
+    const table = document.getElementById("claimsTable");
+    const rows = table.querySelectorAll("tbody tr");
+
+    input.addEventListener("input", function () {
+        const filter = input.value.toLowerCase();
+
+        rows.forEach(row => {
+            const month = row.cells[0].textContent.toLowerCase();
+            const verification = row.cells[4].textContent.toLowerCase();
+            const approval = row.cells[5].textContent.toLowerCase();
+
+            row.style.display = (month.includes(filter) || verification.includes(filter) || approval.includes(filter)) ? "" : "none";
+        });
+    });
+</script>

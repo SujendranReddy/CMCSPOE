@@ -10,9 +10,6 @@ namespace CMCS.Models
         public int ClaimID { get; set; }
 
         [Required]
-        public string Lecturer { get; set; }
-
-        [Required]
         public string Month { get; set; }
 
         [Required]

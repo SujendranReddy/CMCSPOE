@@ -1,40 +1,93 @@
-﻿@{
+﻿@using CMCS.Models
+@{
     ViewData["Title"] = "Claim Details";
-    var claim = ViewBag.Claim;
+    var claim = ViewBag.Claim as Claim;
+    if (claim == null)
+    {
+        <text>Claim not found.</text>
+        return;
+    }
 }
-<!--Identical to other claim details-->
+
 <div style="font-family: Arial, sans-serif; padding:30px; background-color:#F5F5F5; min-height:100vh;">
     <h2 style="color:#2C3E50; margin-bottom:20px;">Claim Details</h2>
 
     <div style="max-width:500px; background-color:white; padding:20px; border-radius:12px;">
         <p><strong>Claim ID:</strong> @claim.ClaimID</p>
+        <p><strong>Submitted By:</strong> @claim.SubmittedBy</p>
         <p><strong>Claim Month:</strong> @claim.Month</p>
         <p><strong>Hours Worked:</strong> @claim.HoursWorked</p>
-        <p><strong>Hourly Rate:</strong>R @claim.HourlyRate</p>
-        <p><strong>Total Amount:</strong>R @claim.TotalAmount</p>
+        <p><strong>Hourly Rate:</strong> R @claim.HourlyRate</p>
+        <p><strong>Total Amount:</strong> R @claim.TotalAmount</p>
+
         <p>
-            <strong>Status:</strong>
-            <span style="color:@(claim.Status == "Approved" ? "#4CAF50" : claim.Status == "Rejected" ? "#C0392B" : "#D67F2B"); font-weight:bold;">
-                @claim.Status
+            <strong>Verification:</strong>
+            <span style="color:white; font-weight:bold; padding:4px 8px; border-radius:4px;
+                         background-color:@(
+                  claim.VerificationStatus == ClaimVerificationStatus.Pending ? "#D67F2B" :
+                  claim.VerificationStatus == ClaimVerificationStatus.Verified ? "#4CAF50" :
+                  claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B" :
+                  "#D67F2B"
+                                                  );
+                         margin-left:8px;">
+                @claim.VerificationStatus
             </span>
         </p>
-        <p><strong>Submitted On:</strong> @claim.SubmittedOn</p>
-        <p><strong>Submitted By:</strong> @claim.SubmittedBy</p>
-        <p><strong>Approved By:</strong> @claim.ApprovedBy</p>
 
-        <div>
+        <p>
+            <strong>Approval:</strong>
+            <span style="color:white; font-weight:bold; padding:4px 8px; border-radius:4px;
+                         background-color:@(
+                  claim.ApprovalStatus == ClaimApprovalStatus.Pending ? "#D67F2B" :
+                  claim.ApprovalStatus == ClaimApprovalStatus.Approved ? "#4CAF50" :
+                  claim.ApprovalStatus == ClaimApprovalStatus.Rejected ? "#C0392B" :
+                  "#D67F2B"
+                                                  );
+                         margin-left:8px;">
+                @claim.ApprovalStatus
+            </span>
+        </p>
+
+        <p><strong>Submitted On:</strong> @claim.SubmittedOn.ToString("yyyy-MM-dd HH:mm")</p>
+
+        <p><strong>Verified By:</strong> @(string.IsNullOrWhiteSpace(claim.VerifiedBy) ? "-" : claim.VerifiedBy)</p>
+        <p><strong>Verified On:</strong> @(claim.VerifiedOn.HasValue? claim.VerifiedOn.Value.ToString("yyyy-MM-dd HH:mm") : "-")</p>
+
+        <p><strong>Approved By:</strong> @(string.IsNullOrWhiteSpace(claim.ApprovedBy) ? "-" : claim.ApprovedBy)</p>
+        <p><strong>Approved On:</strong> @(claim.ApprovedOn.HasValue? claim.ApprovedOn.Value.ToString("yyyy-MM-dd HH:mm") : "-")</p>
+
+        <div style="margin-top:12px;">
             <strong>Supporting Documents:</strong>
-            <ul>
-                @foreach (var doc in claim.Documents)
-                {
-                    <li>@doc</li>
-                }
-            </ul>
+            @if (claim.OriginalDocuments != null && claim.OriginalDocuments.Any())
+            {
+                <ul>
+                    @for (int i = 0; i < claim.OriginalDocuments.Count; i++)
+                    {
+                        var original = claim.OriginalDocuments[i];
+                        string encrypted = (claim.EncryptedDocuments != null && claim.EncryptedDocuments.Count > i) ? claim.EncryptedDocuments[i] : null;
+                        <li>
+                            @original
+                            @if (!string.IsNullOrEmpty(encrypted))
+                            {
+                                <a asp-controller="Lecturer" asp-action="DownloadFile"
+                                   asp-route-claimId="@claim.ClaimID"
+                                   asp-route-file="@encrypted"
+                                   style="margin-left:10px; color:#D67F2B; text-decoration:none;">
+                                    Download
+                                </a>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>No supporting documents uploaded.</p>
+            }
         </div>
 
         <a href="/Manager/Dashboard"
-           style="display:inline-block; margin-top:15px; padding:10px 20px; background-color:#D67F2B; color:white; text-decoration:none; border-radius:6px; transition:background-color 0.3s;"
-           onmouseover="this.style.backgroundColor='#B76A1F'" onmouseout="this.style.backgroundColor='#D67F2B'">
+           style="display:inline-block; margin-top:15px; padding:10px 20px; background-color:#D67F2B; color:white; text-decoration:none; border-radius:6px;">
             Back To Dashboard
         </a>
     </div>
