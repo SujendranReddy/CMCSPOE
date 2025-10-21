@@ -62,11 +62,19 @@ AES Encryption
 **Changes Implemented from Part 1 → Part 2**
 
 Data Storage – Encrypted JSON file storage
+
 Workflow Logic – Coordinator verifies; Manager approves
+
 Claim Model – Added VerifiedBy and ApprovedBy fields
+
 Claim Status Enum for both Verification and Approval – Added full flow: Pending, Verified/Approved, Rejected
+
 Lecturer Feedback Fix – Role restrictions enforced (PC = verify, AM = approve/reject)
+
 UI Improvements – Clean tables, spacing, shadows, and color-coded badges
+
 Popup Functionality – Added name entry popups for verification and approval
+
 Status Display – Color-coded status cells for clarity
+
 Claim Details View – Displays verification and approval info clearly
