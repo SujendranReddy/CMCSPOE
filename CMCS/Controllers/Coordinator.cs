@@ -2,6 +2,8 @@
 using CMCS.Data;
 using CMCS.Models;
 using CMCS.Services;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace CMCS.Controllers
 {
@@ -14,11 +16,13 @@ namespace CMCS.Controllers
             _encryptionService = new FileEncryptionService();
         }
 
+        // Coordinator Dashboard
         public IActionResult Dashboard()
         {
             var claims = ClaimDataStore.GetAllClaims();
             ViewBag.Claims = claims;
 
+            // Dashboard summary counts for verification
             ViewBag.VerificationPendingCount = ClaimDataStore.GetVerificationPendingCount();
             ViewBag.VerifiedCount = ClaimDataStore.GetVerifiedCount();
             ViewBag.VerificationRejectedCount = ClaimDataStore.GetVerificationRejectedCount();
@@ -26,15 +30,19 @@ namespace CMCS.Controllers
             return View();
         }
 
+        // View claim details
         [HttpGet]
         public IActionResult ClaimDetails(int claimId)
         {
             var claim = ClaimDataStore.GetClaimById(claimId);
-            if (claim == null) return NotFound();
+            if (claim == null)
+                return NotFound();
+
             ViewBag.Claim = claim;
             return View();
         }
 
+        // Download decrypted document for viewing
         [HttpGet]
         public async Task<IActionResult> DownloadFile(int claimId, string file)
         {
@@ -48,9 +56,7 @@ namespace CMCS.Controllers
 
             try
             {
-                // This reads the encrypted file and returns a Memory stream which has the decrypted data
                 var memoryStream = await _encryptionService.DecryptFileAsync(filePath);
-                // The original file name corresponds to the encrypted file
                 var originalIndex = claim.EncryptedDocuments.IndexOf(file);
                 var originalName = claim.OriginalDocuments[originalIndex];
 
@@ -58,29 +64,42 @@ namespace CMCS.Controllers
             }
             catch
             {
-                // Just to catch any errors likes corrupted files or wrong keys
                 return BadRequest("Error decrypting the file.");
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult VerifyClaim(int claimId, string verifiedBy)
+        public IActionResult VerifyOrRejectClaim(int claimId, string verifiedBy, string actionType)
         {
-            // This Ensures a name is provided for tracking which coordinator verified the claim
             if (string.IsNullOrWhiteSpace(verifiedBy))
             {
-                TempData["Error"] = "Verification name is required.";
+                TempData["Error"] = "Name is required.";
                 return RedirectToAction("Dashboard");
             }
 
             var claim = ClaimDataStore.GetClaimById(claimId);
-            // This only allows verfication if the claim is pending
-            if (claim != null && claim.VerificationStatus == ClaimVerificationStatus.Pending)
+            if (claim == null)
             {
-                // This updates the claim's verification status and it stores who verified it
+                TempData["Error"] = "Claim not found.";
+                return RedirectToAction("Dashboard");
+            }
+
+            if (claim.VerificationStatus != ClaimVerificationStatus.Pending)
+            {
+                TempData["Error"] = "Only pending claims can be verified or rejected.";
+                return RedirectToAction("Dashboard");
+            }
+
+            if (actionType == "verify")
+            {
                 ClaimDataStore.UpdateVerificationStatus(claimId, ClaimVerificationStatus.Verified, verifiedBy, "Coordinator");
-                TempData["Message"] = $"Claim {claim.ClaimID} verified by {verifiedBy}.";
+                TempData["Message"] = $"Claim #{claimId} verified by {verifiedBy}.";
+            }
+            else if (actionType == "reject")
+            {
+                ClaimDataStore.UpdateVerificationStatus(claimId, ClaimVerificationStatus.Rejected, verifiedBy, "Coordinator");
+                TempData["Message"] = $"Claim #{claimId} rejected by {verifiedBy}.";
             }
 
             return RedirectToAction("Dashboard");

@@ -7,7 +7,7 @@
 <div style="font-family:'Segoe UI'; padding:40px; background-color:#F5F5F5; min-height:100vh;">
     <h2 style="color:#1F3B6B; margin-bottom:25px; font-size:28px;">Programme Coordinator Dashboard</h2>
 
- 
+
     <div style="margin-bottom:20px; max-width:400px;">
         <input type="text" id="searchInput" placeholder="Search by Month, Submitted By, or Verification..."
                style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:14px;
@@ -37,27 +37,27 @@
                         <td style="padding:12px;">@claim.HourlyRate</td>
 
                         <td style="padding:10px;
-                               color:white;
-                               font-weight:bold;
-                               background-color:@(
+                                   color:white;
+                                   font-weight:bold;
+                                   background-color:@(
                             claim.VerificationStatus == ClaimVerificationStatus.Pending ? "#D67F2B" :
                             claim.VerificationStatus == ClaimVerificationStatus.Verified ? "#4CAF50" :
                             claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B" :
                             "#999"
-                                                                                                                                                                                                                                                );
-                               text-align:center;">
+                                                        );
+                                   text-align:center;">
                             @claim.VerificationStatus
                         </td>
 
                         <td style="padding:10px;
-                               color:white;
-                               font-weight:bold;
-                               background-color:@(
+                                   color:white;
+                                   font-weight:bold;
+                                   background-color:@(
                             claim.ApprovalStatus == ClaimApprovalStatus.Approved ? "#4CAF50" :
                             claim.ApprovalStatus == ClaimApprovalStatus.Rejected ? "#C0392B" :
                             "#D67F2B"
-                                                                                                                                                                                                                                                );
-                               text-align:center;">
+                                                        );
+                                   text-align:center;">
                             @claim.ApprovalStatus
                         </td>
 
@@ -70,9 +70,15 @@
                             @if (claim.VerificationStatus == ClaimVerificationStatus.Pending)
                             {
                                 <button type="button"
-                                        onclick="openNamePopup(@claim.ClaimID)"
-                                        style="padding:8px 14px; background-color:#D67F2B; color:white; border:none; border-radius:6px; cursor:pointer;">
+                                        onclick="openNamePopup(@claim.ClaimID, 'verify')"
+                                        style="padding:8px 14px; background-color:#4CAF50; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:6px;">
                                     Verify
+                                </button>
+
+                                <button type="button"
+                                        onclick="openNamePopup(@claim.ClaimID, 'reject')"
+                                        style="padding:8px 14px; background-color:#C0392B; color:white; border:none; border-radius:6px; cursor:pointer;">
+                                    Reject
                                 </button>
                             }
                         </td>
@@ -83,42 +89,49 @@
     </div>
 </div>
 
-<!-- This popup appears when verify is clicked, it prompts the user to enter their full name before verifying -->
+<!-- This popup appears when verify or reject is clicked, it prompts the user to enter their full name before proceeding -->
 <div id="namePopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.4); justify-content:center; align-items:center;">
     <div style="background:white; padding:25px; border-radius:10px; width:320px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.2);">
-        <h3 style="color:#1F3B6B; margin-bottom:15px;">Verify Claim</h3>
-        <p style="margin-bottom:10px;">Enter your full name to verify this claim:</p>
+        <h3 id="popupTitle" style="color:#1F3B6B; margin-bottom:15px;">Verify Claim</h3>
+        <p style="margin-bottom:10px;">Enter your full name to continue:</p>
         <input type="text" id="verifierName" placeholder="Your name"
                style="width:90%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-bottom:15px;" />
         <div>
-            <button onclick="submitVerification()" style="background-color:#2A5298; color:white; border:none; padding:8px 14px; border-radius:6px; margin-right:8px;">Submit</button>
+            <button onclick="submitAction()" style="background-color:#2A5298; color:white; border:none; padding:8px 14px; border-radius:6px; margin-right:8px;">Submit</button>
             <button onclick="closeNamePopup()" style="background-color:#C0392B; color:white; border:none; padding:8px 14px; border-radius:6px;">Cancel</button>
         </div>
     </div>
 </div>
 
-<form id="verifyForm" method="post" asp-action="VerifyClaim" asp-controller="Coordinator" style="display:none;">
+<form id="verifyForm" method="post" asp-action="VerifyOrRejectClaim" asp-controller="Coordinator" style="display:none;">
     @Html.AntiForgeryToken()
     <input type="hidden" name="claimId" id="hiddenClaimId" />
     <input type="hidden" name="verifiedBy" id="hiddenVerifiedBy" />
+    <input type="hidden" name="actionType" id="hiddenActionType" />
 </form>
 
 <script>
     let currentClaimId = null;
+    let currentAction = null;
 
-    // this opens the popup and stores which claim is being verified
-    function openNamePopup(claimId) {
+    // this opens the popup and stores which claim is being verified or rejected
+    function openNamePopup(claimId, action) {
         currentClaimId = claimId;
+        currentAction = action;
+        document.getElementById('popupTitle').textContent =
+            action === 'reject' ? 'Reject Claim' : 'Verify Claim';
         document.getElementById('namePopup').style.display = 'flex';
     }
+
     // this closes the popup and clears the name
     function closeNamePopup() {
         document.getElementById('namePopup').style.display = 'none';
         document.getElementById('verifierName').value = '';
     }
-    // this validates the name
-    function submitVerification() {
+
+    // this validates the name and submits the action (verify or reject)
+    function submitAction() {
         const name = document.getElementById('verifierName').value.trim();
         if (!name) {
             alert("Please enter your name before submitting.");
@@ -127,10 +140,12 @@
 
         document.getElementById('hiddenClaimId').value = currentClaimId;
         document.getElementById('hiddenVerifiedBy').value = name;
+        document.getElementById('hiddenActionType').value = currentAction;
         document.getElementById('verifyForm').submit();
     }
+
     // The search bar filters thorugh the table rows as the user types into the search box
-    // It matches against AuthenticatorAssertionResponse month (num), submitted by, or verification
+    // It matches against month (num), submitted by, or verification
     const searchInput = document.getElementById("searchInput");
     const claimsTable = document.getElementById("claimsTable");
     const rows = claimsTable.querySelectorAll("tbody tr");
