@@ -1,50 +1,83 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using CMCS.Data;
+using CMCS.Models;
+using CMCS.Services;
 
 namespace CMCS.Controllers
 {
     public class CoordinatorController : Controller
     {
-        // shows the coordinator dashboard
-        // prepares a list of claims so the view can display them
+        private readonly FileEncryptionService _encryptionService;
+
+        public CoordinatorController()
+        {
+            _encryptionService = new FileEncryptionService();
+        }
+
         public IActionResult Dashboard()
         {
-            // creates fake claims to simulate data that would normally come from the database
-            var claims = new[]
-            {
-                new { Month = "July 2025", Lecturer = "John Doe", HoursWorked = 40, HourlyRate = 500, Status = "Pending" },
-                new { Month = "August 2025", Lecturer = "John Doe", HoursWorked = 35, HourlyRate = 500, Status = "Pending" }
-            };
-
-            // adds the claims to the ViewBag so the view can access them easily
+            var claims = ClaimDataStore.GetAllClaims();
             ViewBag.Claims = claims;
 
-            // returns the dashboard view
+            ViewBag.VerificationPendingCount = ClaimDataStore.GetVerificationPendingCount();
+            ViewBag.VerifiedCount = ClaimDataStore.GetVerifiedCount();
+            ViewBag.VerificationRejectedCount = ClaimDataStore.GetVerificationRejectedCount();
+
             return View();
         }
 
-        // displays the details of a single claim for a given month
-        public IActionResult ClaimDetails(string month)
+        [HttpGet]
+        public IActionResult ClaimDetails(int claimId)
         {
-            // creates a fake claim to simulate what might be retrieved from the database
-            var claim = new
-            {
-                ClaimID = 57,
-                Month = month,
-                HoursWorked = 40,
-                HourlyRate = 500,
-                TotalAmount = 20000,
-                Status = "Pending",
-                SubmittedOn = "2025-07-05",
-                SubmittedBy = "John Doe",
-                Documents = new[] { "Invoice.pdf", "Report.docx" },
-                ApprovedBy = "-" // Claim is still pending approval
-            };
-
-            // adds the claim to the ViewBag for the view to display
+            var claim = ClaimDataStore.GetClaimById(claimId);
+            if (claim == null) return NotFound();
             ViewBag.Claim = claim;
-
-            // returns the claim details view
             return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadFile(int claimId, string file)
+        {
+            var claim = ClaimDataStore.GetClaimById(claimId);
+            if (claim == null || !claim.EncryptedDocuments.Contains(file))
+                return NotFound();
+
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", $"claim-{claimId}", file);
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            try
+            {
+                var memoryStream = await _encryptionService.DecryptFileAsync(filePath);
+                var originalIndex = claim.EncryptedDocuments.IndexOf(file);
+                var originalName = claim.OriginalDocuments[originalIndex];
+
+                return File(memoryStream, "application/octet-stream", originalName);
+            }
+            catch
+            {
+                return BadRequest("Error decrypting the file.");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult VerifyClaim(int claimId, string verifiedBy)
+        {
+            if (string.IsNullOrWhiteSpace(verifiedBy))
+            {
+                TempData["Error"] = "Verification name is required.";
+                return RedirectToAction("Dashboard");
+            }
+
+            var claim = ClaimDataStore.GetClaimById(claimId);
+            if (claim != null && claim.VerificationStatus == ClaimVerificationStatus.Pending)
+            {
+                ClaimDataStore.UpdateVerificationStatus(claimId, ClaimVerificationStatus.Verified, verifiedBy, "Coordinator");
+                TempData["Message"] = $"Claim {claim.ClaimID} verified by {verifiedBy}.";
+            }
+
+            return RedirectToAction("Dashboard");
         }
     }
 }

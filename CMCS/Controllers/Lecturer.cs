@@ -1,44 +1,137 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using CMCS.Data;
+using CMCS.Models;
+using CMCS.Services;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace CMCS.Controllers
 {
     public class LecturerController : Controller
     {
-        //Idententical to other controllers
+        private readonly FileEncryptionService _encryptionService;
+        private readonly long _maxFileSize = 5 * 1024 * 1024; // 5MB
+        private readonly string[] _allowedExtensions = { ".pdf", ".docx", ".xlsx" };
+
+        public LecturerController()
+        {
+            _encryptionService = new FileEncryptionService();
+        }
+
         public IActionResult Dashboard()
         {
-            var claims = new[]
-            {
-                new { Month = "July 2025", HoursWorked = 40, HourlyRate = 500, Status = "Pending" },
-                new { Month = "August 2025", HoursWorked = 35, HourlyRate = 500, Status = "Pending" }
-            };
+            var allClaims = ClaimDataStore.GetAllClaims();
 
-            ViewBag.Claims = claims;
+            ViewBag.Claims = allClaims;
+            ViewBag.PendingCount = allClaims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Pending);
+            ViewBag.ApprovedCount = allClaims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Approved);
+            ViewBag.RejectedCount = allClaims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Rejected);
+
             return View();
         }
-        // This is for directing the user to submitclaim page when they click the button 
-        public IActionResult SubmitClaim()
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadFile(int claimId, string file)
         {
-            return View();
-        }
-        public IActionResult ClaimDetails(string month)
-        {
-            var claim = new
+            var claim = ClaimDataStore.GetClaimById(claimId);
+            if (claim == null || !claim.EncryptedDocuments.Contains(file))
+                return NotFound();
+
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", $"claim-{claimId}", file);
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            try
             {
-                ClaimID = 57,
-                Month = month,
-                HoursWorked = 40,
-                HourlyRate = 500,
-                TotalAmount = 20000,
-                Status = "Pending",
-                SubmittedOn = "2025-07-05",
-                SubmittedBy = "John Doe",
-                Documents = new[] { "Invoice.pdf", "Report.docx" },
-                ApprovedBy = "-" 
-            };
+                var memoryStream = await _encryptionService.DecryptFileAsync(filePath);
+                var originalIndex = claim.EncryptedDocuments.IndexOf(file);
+                var originalName = claim.OriginalDocuments[originalIndex];
+
+                return File(memoryStream, "application/octet-stream", originalName);
+            }
+            catch
+            {
+                return BadRequest("Error decrypting the file.");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ClaimDetails(int claimId)
+        {
+            var claim = ClaimDataStore.GetClaimById(claimId);
+            if (claim == null) return NotFound();
+
             ViewBag.Claim = claim;
             return View();
         }
 
+        [HttpGet]
+        public IActionResult SubmitClaim() => View();
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitClaim(Claim newClaim, List<IFormFile> uploadedFiles)
+        {
+            if (!ModelState.IsValid)
+                return View(newClaim);
+
+            newClaim.SubmittedOn = DateTime.UtcNow;
+
+            newClaim.VerificationStatus = ClaimVerificationStatus.Pending;
+            newClaim.ApprovalStatus = ClaimApprovalStatus.Pending;
+
+            uploadedFiles ??= new List<IFormFile>();
+
+            ClaimDataStore.AddClaim(newClaim);
+
+            var claimFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", $"claim-{newClaim.ClaimID}");
+            Directory.CreateDirectory(claimFolder);
+
+            foreach (var file in uploadedFiles)
+            {
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+                if (!_allowedExtensions.Contains(ext))
+                {
+                    ModelState.AddModelError("", $"File type {ext} not allowed.");
+                    return View(newClaim);
+                }
+
+                if (file.Length > _maxFileSize)
+                {
+                    ModelState.AddModelError("", $"File {file.FileName} exceeds {_maxFileSize / (1024 * 1024)} MB limit.");
+                    return View(newClaim);
+                }
+
+                var encryptedName = $"{Path.GetFileNameWithoutExtension(Path.GetRandomFileName())}{ext}.enc";
+                var filePath = Path.Combine(claimFolder, encryptedName);
+
+                try
+                {
+                    using var stream = file.OpenReadStream();
+                    await _encryptionService.EncryptFileAsync(stream, filePath);
+
+                    newClaim.EncryptedDocuments.Add(encryptedName);
+                    newClaim.OriginalDocuments.Add(file.FileName);
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Failed to encrypt file {file.FileName}: {ex.Message}");
+                    return View(newClaim);
+                }
+            }
+
+            if (newClaim.EncryptedDocuments.Any())
+                ClaimDataStore.AppendEncryptedDocuments(newClaim.ClaimID, newClaim.EncryptedDocuments);
+
+            if (newClaim.OriginalDocuments.Any())
+                ClaimDataStore.AppendOriginalDocuments(newClaim.ClaimID, newClaim.OriginalDocuments);
+
+            TempData["SuccessMessage"] = "Claim submitted successfully.";
+            return RedirectToAction("Dashboard");
+        }
     }
 }
