@@ -7,7 +7,6 @@
 <div style="font-family:'Segoe UI'; padding:40px; background-color:#F5F5F5; min-height:100vh;">
     <h2 style="color:#1F3B6B; margin-bottom:25px; font-size:28px;">Academic Manager Dashboard</h2>
 
-    <!-- Search bar -->
     <div style="margin-bottom:20px; max-width:400px;">
         <input type="text" id="searchInput" placeholder="Search by Month, Submitted By, or Approval..."
                style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:14px;
@@ -135,7 +134,7 @@
         document.getElementById('finalizeForm').submit();
     }
 
-    // ====== SEARCH BAR FUNCTIONALITY ======
+    // Similar to other search bars but variable includes approval
     const searchInput = document.getElementById("searchInput");
     const claimsTable = document.getElementById("claimsTable");
     const rows = claimsTable.querySelectorAll("tbody tr");

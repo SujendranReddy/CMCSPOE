@@ -10,9 +10,11 @@ namespace CMCS.Data
 {
     public static class ClaimDataStore
     {
+        // This is the path for where all the claims are stored as JSON
         private static readonly string FilePath =
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "claims.json");
 
+        // Lock objects ensures thread safety when operations like file or memory are taking place
         private static readonly object _lock = new object();
         private static List<Claim> _claims = new List<Claim>();
         private static int _nextId = 1;
@@ -25,6 +27,7 @@ namespace CMCS.Data
 
         public static List<Claim> GetAllClaims()
         {
+            // This just ensures that external changes are more unlikely
             lock (_lock) { return _claims.Select(c => Clone(c)).ToList(); }
         }
 
@@ -37,6 +40,7 @@ namespace CMCS.Data
         {
             lock (_lock)
             {
+                // For better flexibility I used case-insensitivity
                 return _claims.FirstOrDefault(c => string.Equals(c.Month, month, StringComparison.OrdinalIgnoreCase));
             }
         }
@@ -47,12 +51,15 @@ namespace CMCS.Data
 
             lock (_lock)
             {
+                // This is to assign new IDs
                 claim.ClaimID = _nextId++;
                 claim.SubmittedOn = DateTime.UtcNow;
 
+                // Sets the initial status to pending
                 claim.VerificationStatus = ClaimVerificationStatus.Pending;
                 claim.ApprovalStatus = ClaimApprovalStatus.Pending;
 
+                //Initializing all fieldss
                 claim.EncryptedDocuments ??= new List<string>();
                 claim.OriginalDocuments ??= new List<string>();
                 claim.VerifiedBy ??= "-";
@@ -62,6 +69,7 @@ namespace CMCS.Data
                 SaveData();
             }
         }
+        //Mehtod for updating verification
         public static void UpdateVerificationStatus(int claimId, ClaimVerificationStatus newStatus, string userName = "-", string role = "-")
         {
             lock (_lock)
@@ -77,7 +85,7 @@ namespace CMCS.Data
             }
         }
 
-
+        // This is for updating approval
         public static void UpdateApprovalStatus(int claimId, ClaimApprovalStatus newStatus, string userName = "-", string role = "-")
         {
             lock (_lock)
@@ -93,7 +101,7 @@ namespace CMCS.Data
             }
         }
 
-
+        // adds encrypted file names
         public static void AppendEncryptedDocuments(int claimId, IEnumerable<string> fileNames)
         {
             if (fileNames == null) return;
@@ -109,6 +117,7 @@ namespace CMCS.Data
             }
         }
 
+        // This adds the original name to a claim
         public static void AppendOriginalDocuments(int claimId, IEnumerable<string> fileNames)
         {
             if (fileNames == null) return;
@@ -160,16 +169,17 @@ namespace CMCS.Data
         {
             lock (_lock)
             {
+                // For JSON serialization options like enum values as strings
                 var options = new JsonSerializerOptions
                 {
                     WriteIndented = true,
                     Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
                 };
-
+                // This ensure it exists before saving
                 var dir = Path.GetDirectoryName(FilePath);
                 if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
-
+                // Writing data to the disk
                 var json = JsonSerializer.Serialize(_claims, options);
                 File.WriteAllText(FilePath, json);
             }
@@ -183,6 +193,7 @@ namespace CMCS.Data
                 {
                     if (!File.Exists(FilePath))
                     {
+                        // This is for initializing new datasets
                         _claims = new List<Claim>();
                         _nextId = 1;
                         return;
@@ -197,6 +208,7 @@ namespace CMCS.Data
                     _claims = JsonSerializer.Deserialize<List<Claim>>(json, options) ?? new List<Claim>();
                     _nextId = _claims.Any() ? _claims.Max(c => c.ClaimID) + 1 : 1;
 
+                    // Ensure lists and text fields are never null
                     foreach (var c in _claims)
                     {
                         c.EncryptedDocuments ??= new List<string>();
@@ -207,12 +219,14 @@ namespace CMCS.Data
                 }
                 catch
                 {
+                    // Just as a fall back start at 1
                     _claims = new List<Claim>();
                     _nextId = 1;
                 }
             }
         }
 
+        // A copy of the claim class to prevent other code for "mutating"
         private static Claim Clone(Claim src)
         {
             return new Claim

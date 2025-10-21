@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CMCS.Controllers
 {
+    // Almost identical to the coordinator controller 
+    // The main difference is that Managers approve claims where as Coordinators verify
     public class ManagerController : Controller
     {
         private readonly FileEncryptionService _encryptionService;

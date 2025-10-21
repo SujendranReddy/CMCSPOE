@@ -22,7 +22,6 @@ namespace CMCS.Models
 
         public decimal TotalAmount => HoursWorked * HourlyRate;
 
-        // Two distinct statuses
         public ClaimVerificationStatus VerificationStatus { get; set; } = ClaimVerificationStatus.Pending;
         public ClaimApprovalStatus ApprovalStatus { get; set; } = ClaimApprovalStatus.Pending;
 

@@ -12,6 +12,7 @@ namespace CMCS.Tests
 {
     public class ClaimDataStoreTests
     {
+        // Testing if claims auto assign IDs and set pending status
         [Fact]
         public void AddClaim_ShouldAssignIdAndPendingStatus()
         {
@@ -26,6 +27,7 @@ namespace CMCS.Tests
             ClaimDataStore.AddClaim(claim);
             var retrieved = ClaimDataStore.GetClaimById(claim.ClaimID);
 
+            // Verify info is correct
             Assert.NotNull(retrieved);
             Assert.Equal(ClaimVerificationStatus.Pending, retrieved.VerificationStatus);
             Assert.Equal(ClaimApprovalStatus.Pending, retrieved.ApprovalStatus);
@@ -35,20 +37,23 @@ namespace CMCS.Tests
             Assert.Empty(retrieved.EncryptedDocuments);
         }
 
+        // Checks if verification status changes
         [Fact]
         public void UpdateVerificationStatus_ShouldChangeToVerified()
         {
             var claim = new Claim { SubmittedBy = "Jane", Month = "Nov", HoursWorked = 5, HourlyRate = 80 };
             ClaimDataStore.AddClaim(claim);
-
+            // Updating status
             ClaimDataStore.UpdateVerificationStatus(claim.ClaimID, ClaimVerificationStatus.Verified, "Coordinator A", "Coordinator");
             var updated = ClaimDataStore.GetClaimById(claim.ClaimID);
 
+            // Ensure it was updated
             Assert.Equal(ClaimVerificationStatus.Verified, updated.VerificationStatus);
             Assert.Equal("Coordinator A (Coordinator)", updated.VerifiedBy);
             Assert.NotNull(updated.VerifiedOn);
         }
 
+        // Simimarly same logic for Approval status
         [Fact]
         public void UpdateApprovalStatus_ShouldChangeToApproved()
         {
@@ -63,7 +68,7 @@ namespace CMCS.Tests
             Assert.NotNull(updated.ApprovedOn);
         }
 
-
+        // Testing files are encrypted and decrypted
         [Fact]
         public async Task FileEncryptionService_ShouldEncryptAndDecryptSuccessfully()
         {
@@ -72,13 +77,16 @@ namespace CMCS.Tests
             var inputStream = new MemoryStream(Encoding.UTF8.GetBytes(testContent));
             var outputPath = Path.Combine(Path.GetTempPath(), "testfile.enc");
 
+            // Encrypt and then decrypt 
             await service.EncryptFileAsync(inputStream, outputPath);
             var decryptedStream = await service.DecryptFileAsync(outputPath);
             var resultText = Encoding.UTF8.GetString(decryptedStream.ToArray());
 
+            // Check if they match each other
             Assert.Equal(testContent, resultText);
         }
 
+        // Testing that all claims are returned including newly added ones
         [Fact]
         public void GetAllClaims_ShouldReturnListOfClaims()
         {
@@ -90,13 +98,14 @@ namespace CMCS.Tests
             Assert.NotEmpty(allClaims);
             Assert.Contains(allClaims, c => c.SubmittedBy == "Alex");
         }
-
+        //Adding null claim should throw an exception
         [Fact]
         public void AddClaim_ShouldThrowException_WhenClaimIsNull()
         {
             Assert.Throws<ArgumentNullException>(() => ClaimDataStore.AddClaim(null));
         }
 
+        //Decrypting a non -existent file should throw and exception 
         [Fact]
         public async Task DecryptFileAsync_ShouldThrowFileNotFoundException_WhenFileDoesNotExist()
         {
@@ -110,6 +119,7 @@ namespace CMCS.Tests
             Assert.Contains("Encrypted file not found", exception.Message);
         }
 
+        // Testing that a requested claim that doesnt exist returns null
         [Fact]
         public void GetClaimById_ShouldReturnNull_WhenIdDoesNotExist()
         {

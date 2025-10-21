@@ -48,7 +48,9 @@ namespace CMCS.Controllers
 
             try
             {
+                // This reads the encrypted file and returns a Memory stream which has the decrypted data
                 var memoryStream = await _encryptionService.DecryptFileAsync(filePath);
+                // The original file name corresponds to the encrypted file
                 var originalIndex = claim.EncryptedDocuments.IndexOf(file);
                 var originalName = claim.OriginalDocuments[originalIndex];
 
@@ -56,6 +58,7 @@ namespace CMCS.Controllers
             }
             catch
             {
+                // Just to catch any errors likes corrupted files or wrong keys
                 return BadRequest("Error decrypting the file.");
             }
         }
@@ -64,6 +67,7 @@ namespace CMCS.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult VerifyClaim(int claimId, string verifiedBy)
         {
+            // This Ensures a name is provided for tracking which coordinator verified the claim
             if (string.IsNullOrWhiteSpace(verifiedBy))
             {
                 TempData["Error"] = "Verification name is required.";
@@ -71,8 +75,10 @@ namespace CMCS.Controllers
             }
 
             var claim = ClaimDataStore.GetClaimById(claimId);
+            // This only allows verfication if the claim is pending
             if (claim != null && claim.VerificationStatus == ClaimVerificationStatus.Pending)
             {
+                // This updates the claim's verification status and it stores who verified it
                 ClaimDataStore.UpdateVerificationStatus(claimId, ClaimVerificationStatus.Verified, verifiedBy, "Coordinator");
                 TempData["Message"] = $"Claim {claim.ClaimID} verified by {verifiedBy}.";
             }

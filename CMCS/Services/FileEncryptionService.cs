@@ -5,9 +5,11 @@ namespace CMCS.Services
 {
     public class FileEncryptionService
     {
+        //AES encryption key 
         private static readonly byte[] Key = Encoding.UTF8.GetBytes("MySecretKey12345");
         private static readonly byte[] IV = Encoding.UTF8.GetBytes("MyInitVector16b!");
 
+        // This encrypts an input stream and writes the encrypted content to the output file
         public async Task EncryptFileAsync(Stream input, string outputPath)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
@@ -18,6 +20,7 @@ namespace CMCS.Services
                 aes.Key = Key;
                 aes.IV = IV;
 
+                // Creates an encryptor and writes the data to a new file
                 using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
                 using var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
                 using var cryptoStream = new CryptoStream(fileStream, encryptor, CryptoStreamMode.Write);
@@ -25,6 +28,7 @@ namespace CMCS.Services
             }
         }
 
+        // Decrypts an encrypted file and returns the content as a memory stream
         public async Task<MemoryStream> DecryptFileAsync(string encryptedFilePath)
         {
             if (!File.Exists(encryptedFilePath))
@@ -38,7 +42,7 @@ namespace CMCS.Services
                 using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
                 using var fileStream = new FileStream(encryptedFilePath, FileMode.Open, FileAccess.Read);
                 using var cryptoStream = new CryptoStream(fileStream, decryptor, CryptoStreamMode.Read);
-
+            // This stores the decrypted content in a memory stream
                 var decryptStream = new MemoryStream();
                 await cryptoStream.CopyToAsync(decryptStream);
                 decryptStream.Position = 0;

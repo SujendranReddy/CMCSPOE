@@ -7,7 +7,7 @@
 <div style="font-family:'Segoe UI'; padding:40px; background-color:#F5F5F5; min-height:100vh;">
     <h2 style="color:#1F3B6B; margin-bottom:25px; font-size:28px;">Programme Coordinator Dashboard</h2>
 
-    <!-- Search bar -->
+ 
     <div style="margin-bottom:20px; max-width:400px;">
         <input type="text" id="searchInput" placeholder="Search by Month, Submitted By, or Verification..."
                style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:14px;
@@ -83,7 +83,7 @@
     </div>
 </div>
 
-<!-- Modal popup for entering name -->
+<!-- This popup appears when verify is clicked, it prompts the user to enter their full name before verifying -->
 <div id="namePopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.4); justify-content:center; align-items:center;">
     <div style="background:white; padding:25px; border-radius:10px; width:320px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.2);">
@@ -107,16 +107,17 @@
 <script>
     let currentClaimId = null;
 
+    // this opens the popup and stores which claim is being verified
     function openNamePopup(claimId) {
         currentClaimId = claimId;
         document.getElementById('namePopup').style.display = 'flex';
     }
-
+    // this closes the popup and clears the name
     function closeNamePopup() {
         document.getElementById('namePopup').style.display = 'none';
         document.getElementById('verifierName').value = '';
     }
-
+    // this validates the name
     function submitVerification() {
         const name = document.getElementById('verifierName').value.trim();
         if (!name) {
@@ -128,8 +129,8 @@
         document.getElementById('hiddenVerifiedBy').value = name;
         document.getElementById('verifyForm').submit();
     }
-
-    // ====== SEARCH BAR FUNCTIONALITY ======
+    // The search bar filters thorugh the table rows as the user types into the search box
+    // It matches against AuthenticatorAssertionResponse month (num), submitted by, or verification
     const searchInput = document.getElementById("searchInput");
     const claimsTable = document.getElementById("claimsTable");
     const rows = claimsTable.querySelectorAll("tbody tr");
@@ -142,6 +143,7 @@
             const submittedBy = row.cells[1].textContent.toLowerCase();
             const verification = row.cells[4].textContent.toLowerCase();
 
+            // Only shows rows that matched
             row.style.display = (month.includes(filter) || submittedBy.includes(filter) || verification.includes(filter)) ? "" : "none";
         });
     });

@@ -33,6 +33,7 @@ namespace CMCS.Controllers
             return View();
         }
 
+        // This is the same as the download methods in the other controllers
         [HttpGet]
         public async Task<IActionResult> DownloadFile(int claimId, string file)
         {
@@ -89,6 +90,7 @@ namespace CMCS.Controllers
 
             uploadedFiles ??= new List<IFormFile>();
 
+            // This saves the cliam before processing files to get the claimid
             ClaimDataStore.AddClaim(newClaim);
 
             var claimFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", $"claim-{newClaim.ClaimID}");
@@ -98,31 +100,37 @@ namespace CMCS.Controllers
             {
                 var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
 
+                // This is for validating the allowed file types
                 if (!_allowedExtensions.Contains(ext))
                 {
                     ModelState.AddModelError("", $"File type {ext} not allowed.");
                     return View(newClaim);
                 }
 
+                // This validates the max size
                 if (file.Length > _maxFileSize)
                 {
                     ModelState.AddModelError("", $"File {file.FileName} exceeds {_maxFileSize / (1024 * 1024)} MB limit.");
                     return View(newClaim);
                 }
 
+                // Using the file servie to generate encrypted filename
                 var encryptedName = $"{Path.GetFileNameWithoutExtension(Path.GetRandomFileName())}{ext}.enc";
                 var filePath = Path.Combine(claimFolder, encryptedName);
 
                 try
                 {
+                    // This is to encrypt the file and sace it to the disk
                     using var stream = file.OpenReadStream();
                     await _encryptionService.EncryptFileAsync(stream, filePath);
 
+                    // These are used to track the orginal filename and the encrypted one for future downloads
                     newClaim.EncryptedDocuments.Add(encryptedName);
                     newClaim.OriginalDocuments.Add(file.FileName);
                 }
                 catch (Exception ex)
                 {
+                    // To catch any errors
                     ModelState.AddModelError("", $"Failed to encrypt file {file.FileName}: {ex.Message}");
                     return View(newClaim);
                 }
