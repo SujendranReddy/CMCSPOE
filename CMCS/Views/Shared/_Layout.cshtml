@@ -12,11 +12,22 @@
     <header>
         <nav style="position:relative; display:flex; align-items:center; background-color:#2C3E50; padding:10px 30px; color:white;">
             <div style="margin-left:auto;">
-                <a href="/"
-                   style="color:white; text-decoration:none; padding:6px 12px; border-radius:6px; background-color:#C0392B; transition:background-color 0.3s;"
-                   onmouseover="this.style.backgroundColor='#992222'" onmouseout="this.style.backgroundColor='#C0392B'">
-                    Sign Out
-                </a>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <a asp-controller="Account" asp-action="Logout"
+                       style="color:white; text-decoration:none; padding:6px 12px; border-radius:6px; background-color:#C0392B; transition:background-color 0.3s;"
+                       onmouseover="this.style.backgroundColor='#992222'" onmouseout="this.style.backgroundColor='#C0392B'">
+                        Logout
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login"
+                       style="color:white; text-decoration:none; padding:6px 12px; border-radius:6px; background-color:#2980B9; transition:background-color 0.3s;"
+                       onmouseover="this.style.backgroundColor='#1f5f85'" onmouseout="this.style.backgroundColor='#2980B9'">
+                        Login
+                    </a>
+                }
             </div>
             <div style="position:absolute; left:50%; transform:translateX(-50%); font-size:28px; font-weight:300; text-align:center;">
                 Contract Monthly Claim System
