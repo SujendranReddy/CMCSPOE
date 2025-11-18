@@ -1,56 +1,71 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using CMCS.Data;
-using CMCS.Models;
+﻿using CMCS.Models;
 using CMCS.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CMCS.Controllers
 {
     public class CoordinatorController : Controller
     {
+        private readonly ApplicationDbContext _context;
         private readonly FileEncryptionService _encryptionService;
 
-        public CoordinatorController()
+        public CoordinatorController(ApplicationDbContext context, FileEncryptionService encryptionService)
         {
-            _encryptionService = new FileEncryptionService();
+            _context = context;
+            _encryptionService = encryptionService;
         }
 
-        // Coordinator Dashboard
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            var claims = ClaimDataStore.GetAllClaims();
-            ViewBag.Claims = claims;
+            var claims = await _context.Claims.ToListAsync();
+            foreach (var claim in claims)
+                claim.LoadDocumentLists();
 
-            // Dashboard summary counts for verification
-            ViewBag.VerificationPendingCount = ClaimDataStore.GetVerificationPendingCount();
-            ViewBag.VerifiedCount = ClaimDataStore.GetVerifiedCount();
-            ViewBag.VerificationRejectedCount = ClaimDataStore.GetVerificationRejectedCount();
+            ViewBag.Claims = claims;
+            ViewBag.VerificationPendingCount = claims.Count(c => c.VerificationStatus == ClaimVerificationStatus.Pending);
+            ViewBag.VerifiedCount = claims.Count(c => c.VerificationStatus == ClaimVerificationStatus.Verified);
+            ViewBag.VerificationRejectedCount = claims.Count(c => c.VerificationStatus == ClaimVerificationStatus.Rejected);
 
             return View();
         }
 
-        // View claim details
         [HttpGet]
-        public IActionResult ClaimDetails(int claimId)
+        public async Task<IActionResult> ClaimDetails(int claimId)
         {
-            var claim = ClaimDataStore.GetClaimById(claimId);
+            var claim = await _context.Claims.FindAsync(claimId);
             if (claim == null)
                 return NotFound();
 
+            claim.LoadDocumentLists();
             ViewBag.Claim = claim;
             return View();
         }
 
-        // Download decrypted document for viewing
         [HttpGet]
         public async Task<IActionResult> DownloadFile(int claimId, string file)
         {
-            var claim = ClaimDataStore.GetClaimById(claimId);
-            if (claim == null || !claim.EncryptedDocuments.Contains(file))
+            var claim = await _context.Claims.FindAsync(claimId);
+            if (claim == null)
                 return NotFound();
 
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", $"claim-{claimId}", file);
+            claim.LoadDocumentLists();
+
+            if (!claim.EncryptedDocuments.Contains(file))
+                return NotFound();
+
+            var filePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "uploads",
+                $"claim-{claimId}",
+                file
+            );
+
             if (!System.IO.File.Exists(filePath))
                 return NotFound();
 
@@ -70,7 +85,7 @@ namespace CMCS.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult VerifyOrRejectClaim(int claimId, string verifiedBy, string actionType)
+        public async Task<IActionResult> VerifyOrRejectClaim(int claimId, string verifiedBy, string actionType)
         {
             if (string.IsNullOrWhiteSpace(verifiedBy))
             {
@@ -78,12 +93,14 @@ namespace CMCS.Controllers
                 return RedirectToAction("Dashboard");
             }
 
-            var claim = ClaimDataStore.GetClaimById(claimId);
+            var claim = await _context.Claims.FindAsync(claimId);
             if (claim == null)
             {
                 TempData["Error"] = "Claim not found.";
                 return RedirectToAction("Dashboard");
             }
+
+            claim.LoadDocumentLists();
 
             if (claim.VerificationStatus != ClaimVerificationStatus.Pending)
             {
@@ -93,14 +110,22 @@ namespace CMCS.Controllers
 
             if (actionType == "verify")
             {
-                ClaimDataStore.UpdateVerificationStatus(claimId, ClaimVerificationStatus.Verified, verifiedBy, "Coordinator");
+                claim.VerificationStatus = ClaimVerificationStatus.Verified;
+                claim.VerifiedBy = verifiedBy;
+                claim.VerifiedOn = DateTime.UtcNow;
                 TempData["Message"] = $"Claim #{claimId} verified by {verifiedBy}.";
             }
             else if (actionType == "reject")
             {
-                ClaimDataStore.UpdateVerificationStatus(claimId, ClaimVerificationStatus.Rejected, verifiedBy, "Coordinator");
+                claim.VerificationStatus = ClaimVerificationStatus.Rejected;
+                claim.VerifiedBy = verifiedBy;
+                claim.VerifiedOn = DateTime.UtcNow;
                 TempData["Message"] = $"Claim #{claimId} rejected by {verifiedBy}.";
             }
+
+            claim.SaveDocumentLists();
+            _context.Claims.Update(claim);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Dashboard");
         }

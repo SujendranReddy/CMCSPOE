@@ -1,29 +1,34 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using CMCS.Data;
-using CMCS.Models;
+﻿using CMCS.Models;
 using CMCS.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System;
 
 namespace CMCS.Controllers
 {
     public class LecturerController : Controller
     {
         private readonly FileEncryptionService _encryptionService;
-        private readonly long _maxFileSize = 5 * 1024 * 1024; // 5MB
+        private readonly ApplicationDbContext _context;
+        private readonly long _maxFileSize = 5 * 1024 * 1024;
         private readonly string[] _allowedExtensions = { ".pdf", ".docx", ".xlsx" };
 
-        public LecturerController()
+        public LecturerController(ApplicationDbContext context)
         {
+            _context = context;
             _encryptionService = new FileEncryptionService();
         }
 
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            var allClaims = ClaimDataStore.GetAllClaims();
+            var allClaims = await _context.Claims.ToListAsync();
+
+            foreach (var c in allClaims)
+                c.LoadDocumentLists();
 
             ViewBag.Claims = allClaims;
             ViewBag.PendingCount = allClaims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Pending);
@@ -33,15 +38,24 @@ namespace CMCS.Controllers
             return View();
         }
 
-        // This is the same as the download methods in the other controllers
         [HttpGet]
         public async Task<IActionResult> DownloadFile(int claimId, string file)
         {
-            var claim = ClaimDataStore.GetClaimById(claimId);
-            if (claim == null || !claim.EncryptedDocuments.Contains(file))
+            var claim = await _context.Claims.FindAsync(claimId);
+            if (claim == null) return NotFound();
+
+            claim.LoadDocumentLists();
+
+            if (!claim.EncryptedDocuments.Contains(file))
                 return NotFound();
 
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", $"claim-{claimId}", file);
+            var filePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot", "uploads",
+                $"claim-{claimId}",
+                file
+            );
+
             if (!System.IO.File.Exists(filePath))
                 return NotFound();
 
@@ -60,10 +74,12 @@ namespace CMCS.Controllers
         }
 
         [HttpGet]
-        public IActionResult ClaimDetails(int claimId)
+        public async Task<IActionResult> ClaimDetails(int claimId)
         {
-            var claim = ClaimDataStore.GetClaimById(claimId);
+            var claim = await _context.Claims.FindAsync(claimId);
             if (claim == null) return NotFound();
+
+            claim.LoadDocumentLists();
 
             ViewBag.Claim = claim;
             return View();
@@ -75,7 +91,6 @@ namespace CMCS.Controllers
             return View();
         }
 
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitClaim(Claim newClaim, List<IFormFile> uploadedFiles)
@@ -84,63 +99,60 @@ namespace CMCS.Controllers
                 return View(newClaim);
 
             newClaim.SubmittedOn = DateTime.UtcNow;
-
             newClaim.VerificationStatus = ClaimVerificationStatus.Pending;
             newClaim.ApprovalStatus = ClaimApprovalStatus.Pending;
 
             uploadedFiles ??= new List<IFormFile>();
 
-            // This saves the cliam before processing files to get the claimid
-            ClaimDataStore.AddClaim(newClaim);
+            _context.Claims.Add(newClaim);
+            await _context.SaveChangesAsync();
 
-            var claimFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", $"claim-{newClaim.ClaimID}");
+            var claimFolder = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot", "uploads",
+                $"claim-{newClaim.ClaimID}"
+            );
+
             Directory.CreateDirectory(claimFolder);
 
             foreach (var file in uploadedFiles)
             {
                 var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-                // This is for validating the allowed file types
                 if (!_allowedExtensions.Contains(ext))
                 {
                     ModelState.AddModelError("", $"File type {ext} not allowed.");
                     return View(newClaim);
                 }
 
-                // This validates the max size
                 if (file.Length > _maxFileSize)
                 {
                     ModelState.AddModelError("", $"File {file.FileName} exceeds {_maxFileSize / (1024 * 1024)} MB limit.");
                     return View(newClaim);
                 }
 
-                // Using the file servie to generate encrypted filename
                 var encryptedName = $"{Path.GetFileNameWithoutExtension(Path.GetRandomFileName())}{ext}.enc";
                 var filePath = Path.Combine(claimFolder, encryptedName);
 
                 try
                 {
-                    // This is to encrypt the file and sace it to the disk
                     using var stream = file.OpenReadStream();
                     await _encryptionService.EncryptFileAsync(stream, filePath);
 
-                    // These are used to track the orginal filename and the encrypted one for future downloads
                     newClaim.EncryptedDocuments.Add(encryptedName);
                     newClaim.OriginalDocuments.Add(file.FileName);
                 }
                 catch (Exception ex)
                 {
-                    // To catch any errors
                     ModelState.AddModelError("", $"Failed to encrypt file {file.FileName}: {ex.Message}");
                     return View(newClaim);
                 }
             }
 
-            if (newClaim.EncryptedDocuments.Any())
-                ClaimDataStore.AppendEncryptedDocuments(newClaim.ClaimID, newClaim.EncryptedDocuments);
+            newClaim.SaveDocumentLists();
 
-            if (newClaim.OriginalDocuments.Any())
-                ClaimDataStore.AppendOriginalDocuments(newClaim.ClaimID, newClaim.OriginalDocuments);
+            _context.Claims.Update(newClaim);
+            await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Claim submitted successfully.";
             return RedirectToAction("Dashboard");
