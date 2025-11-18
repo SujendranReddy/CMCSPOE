@@ -35,7 +35,7 @@ public class HRController : Controller
                 Email = user.Email,
                 HourlyRate = user.HourlyRate,
                 MaxHoursPerMonth = user.MaxHoursPerMonth,
-                Role = roles.FirstOrDefault() 
+                Role = roles.FirstOrDefault()
             });
         }
 
@@ -118,7 +118,6 @@ public class HRController : Controller
         });
     }
 
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(UserCreateEditViewModel model)
@@ -171,19 +170,30 @@ public class HRController : Controller
             await _userManager.ResetPasswordAsync(user, token, model.Password);
         }
 
-
         TempData["Success"] = $"User {user.Email} updated successfully.";
         return RedirectToAction("Index");
     }
-
-
 
     public async Task<IActionResult> Details(string id)
     {
         var user = await _userManager.FindByIdAsync(id);
         if (user == null)
             return NotFound();
-        return View(user);
+
+        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+
+        var model = new UserCreateEditViewModel
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            HourlyRate = user.HourlyRate,
+            MaxHoursPerMonth = user.MaxHoursPerMonth,
+            Role = role
+        };
+
+        return View(model);
     }
 
     public async Task<IActionResult> Delete(string id)
@@ -192,7 +202,20 @@ public class HRController : Controller
         if (user == null)
             return NotFound();
 
-        return View(user);
+        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+
+        var model = new UserCreateEditViewModel
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            HourlyRate = user.HourlyRate,
+            MaxHoursPerMonth = user.MaxHoursPerMonth,
+            Role = role
+        };
+
+        return View(model);
     }
 
     [HttpPost, ActionName("Delete")]

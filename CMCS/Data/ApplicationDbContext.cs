@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using CMCS;
+using CMCS.Models;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
@@ -16,5 +17,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<ApplicationUser>()
                .Property(u => u.HourlyRate)
                .HasPrecision(18, 2);
+
+        builder.Entity<Claim>()
+               .Property(u => u.HourlyRate)
+               .HasPrecision(18, 2);
     }
+    public DbSet<Claim> Claims { get; set; }
+
 }

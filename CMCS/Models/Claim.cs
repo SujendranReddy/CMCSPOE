@@ -6,7 +6,7 @@ namespace CMCS.Models
 {
     public class Claim
     {
-        [Required]
+        [Key]
         public int ClaimID { get; set; }
 
         [Required]
