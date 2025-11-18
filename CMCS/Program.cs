@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using CMCS.Services;
+using CMCS;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,6 +31,7 @@ using (var scope = app.Services.CreateScope())
     var svcProvider = scope.ServiceProvider;
     var db = svcProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
+    await EnsureRoles(svcProvider);
     await CreateHRRole(svcProvider);
 }
 
@@ -54,6 +56,19 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+async Task EnsureRoles(IServiceProvider services)
+{
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    string[] roles = { "HR", "Lecturer", "Coordinator", "Manager" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}
 
 async Task CreateHRRole(IServiceProvider services)
 {

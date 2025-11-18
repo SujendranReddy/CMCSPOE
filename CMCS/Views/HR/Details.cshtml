@@ -1,0 +1,26 @@
+﻿@model CMCS.Models.UserCreateEditViewModel
+
+@{
+    ViewData["Title"] = "View User";
+}
+
+<h2>User Details</h2>
+
+<div class="mb-3">
+    <strong>First Name:</strong> @Model.FirstName
+</div>
+<div class="mb-3">
+    <strong>Last Name:</strong> @Model.LastName
+</div>
+<div class="mb-3">
+    <strong>Email:</strong> @Model.Email
+</div>
+<div class="mb-3">
+    <strong>Hourly Rate:</strong> @Model.HourlyRate
+</div>
+<div class="mb-3">
+    <strong>Max Hours/Month:</strong> @Model.MaxHoursPerMonth
+</div>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+<a asp-action="Index" class="btn btn-secondary">Back to List</a>

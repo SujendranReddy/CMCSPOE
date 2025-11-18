@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using CMCS;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {

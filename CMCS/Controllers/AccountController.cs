@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using CMCS.Models; 
+using CMCS.Models;
+using CMCS;
 public class AccountController : Controller
 {
     private readonly SignInManager<ApplicationUser> _signInManager;
