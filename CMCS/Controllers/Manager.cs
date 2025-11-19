@@ -1,5 +1,7 @@
 ﻿using CMCS.Models;
 using CMCS.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,27 +11,34 @@ using System.Threading.Tasks;
 
 namespace CMCS.Controllers
 {
+    [Authorize(Roles = "Manager")]
     public class ManagerController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly FileEncryptionService _encryptionService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ManagerController(ApplicationDbContext context, FileEncryptionService encryptionService)
+        public ManagerController(ApplicationDbContext context, FileEncryptionService encryptionService, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _encryptionService = encryptionService;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Dashboard()
         {
-            var allClaims = await _context.Claims.ToListAsync();
-            foreach (var claim in allClaims)
+            var claims = await _context.Claims
+                .Where(c => c.VerificationStatus == ClaimVerificationStatus.Verified)
+                .Include(c => c.User)
+                .ToListAsync();
+
+            foreach (var claim in claims)
                 claim.LoadDocumentLists();
 
-            ViewBag.Claims = allClaims;
-            ViewBag.PendingCount = allClaims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Pending);
-            ViewBag.ApprovedCount = allClaims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Approved);
-            ViewBag.RejectedCount = allClaims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Rejected);
+            ViewBag.Claims = claims;
+            ViewBag.PendingCount = claims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Pending);
+            ViewBag.ApprovedCount = claims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Approved);
+            ViewBag.RejectedCount = claims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Rejected);
 
             return View();
         }
@@ -37,9 +46,15 @@ namespace CMCS.Controllers
         [HttpGet]
         public async Task<IActionResult> ClaimDetails(int claimId)
         {
-            var claim = await _context.Claims.FindAsync(claimId);
-            if (claim == null)
-                return NotFound();
+            var claim = await _context.Claims
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.ClaimID == claimId);
+
+            if (claim == null || claim.VerificationStatus != ClaimVerificationStatus.Verified)
+            {
+                TempData["Error"] = "Claim not found or not verified.";
+                return RedirectToAction("Dashboard");
+            }
 
             claim.LoadDocumentLists();
             ViewBag.Claim = claim;
@@ -49,13 +64,19 @@ namespace CMCS.Controllers
         [HttpGet]
         public async Task<IActionResult> DownloadFile(int claimId, string file)
         {
-            var claim = await _context.Claims.FindAsync(claimId);
-            if (claim == null)
-                return NotFound();
+            var claim = await _context.Claims
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.ClaimID == claimId);
+
+            if (claim == null || claim.VerificationStatus != ClaimVerificationStatus.Verified)
+            {
+                TempData["Error"] = "Claim not found or not verified.";
+                return RedirectToAction("Dashboard");
+            }
 
             claim.LoadDocumentLists();
 
-            if (!claim.EncryptedDocuments.Contains(file))
+            if (claim.EncryptedDocuments == null || !claim.EncryptedDocuments.Contains(file))
                 return NotFound();
 
             var filePath = Path.Combine(
@@ -73,7 +94,9 @@ namespace CMCS.Controllers
             {
                 var memoryStream = await _encryptionService.DecryptFileAsync(filePath);
                 var originalIndex = claim.EncryptedDocuments.IndexOf(file);
-                var originalName = claim.OriginalDocuments[originalIndex];
+                var originalName = claim.OriginalDocuments != null
+                    ? claim.OriginalDocuments.ElementAtOrDefault(originalIndex) ?? file
+                    : file;
 
                 return File(memoryStream, "application/octet-stream", originalName);
             }
@@ -85,36 +108,47 @@ namespace CMCS.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> FinalizeClaim(int claimId, string status, string approvedBy)
+        public async Task<IActionResult> FinalizeClaim(int claimId, string actionType)
         {
-            if (string.IsNullOrWhiteSpace(approvedBy))
-            {
-                TempData["Error"] = "Approver name is required.";
-                return RedirectToAction("Dashboard");
-            }
+            var appUser = await _userManager.GetUserAsync(User);
+            var managerName = appUser != null
+                ? $"{appUser.FirstName} {appUser.LastName}".Trim()
+                : User.Identity?.Name ?? "Manager";
 
-            var claim = await _context.Claims.FindAsync(claimId);
-            if (claim == null)
+            var claim = await _context.Claims
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.ClaimID == claimId);
+
+            if (claim == null || claim.VerificationStatus != ClaimVerificationStatus.Verified)
             {
-                TempData["Error"] = "Claim not found.";
+                TempData["Error"] = "This claim cannot be approved. It is not verified.";
                 return RedirectToAction("Dashboard");
             }
 
             claim.LoadDocumentLists();
 
-            if (Enum.TryParse(status, true, out ClaimApprovalStatus newStatus) &&
-                (newStatus == ClaimApprovalStatus.Approved || newStatus == ClaimApprovalStatus.Rejected))
+            if (string.Equals(actionType, "approve", StringComparison.OrdinalIgnoreCase))
             {
-                claim.ApprovalStatus = newStatus;
-                claim.ApprovedBy = approvedBy;
-                claim.ApprovedOn = DateTime.UtcNow;
-
-                claim.SaveDocumentLists();
-                _context.Claims.Update(claim);
-                await _context.SaveChangesAsync();
-
-                TempData["Message"] = $"Claim #{claimId} {status.ToLower()} by {approvedBy}.";
+                claim.ApprovalStatus = ClaimApprovalStatus.Approved;
             }
+            else if (string.Equals(actionType, "reject", StringComparison.OrdinalIgnoreCase))
+            {
+                claim.ApprovalStatus = ClaimApprovalStatus.Rejected;
+            }
+            else
+            {
+                TempData["Error"] = "Invalid action.";
+                return RedirectToAction("Dashboard");
+            }
+
+            claim.ApprovedBy = managerName;
+            claim.ApprovedOn = DateTime.UtcNow;
+
+            claim.SaveDocumentLists();
+            _context.Claims.Update(claim);
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = $"Claim #{claimId} {claim.ApprovalStatus.ToString().ToLower()} by {managerName}.";
 
             return RedirectToAction("Dashboard");
         }

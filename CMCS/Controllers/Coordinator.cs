@@ -1,5 +1,7 @@
 ﻿using CMCS.Models;
 using CMCS.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,20 +11,26 @@ using System.Threading.Tasks;
 
 namespace CMCS.Controllers
 {
+    [Authorize(Roles = "Coordinator")]
     public class CoordinatorController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly FileEncryptionService _encryptionService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CoordinatorController(ApplicationDbContext context, FileEncryptionService encryptionService)
+        public CoordinatorController(ApplicationDbContext context, FileEncryptionService encryptionService, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _encryptionService = encryptionService;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Dashboard()
         {
-            var claims = await _context.Claims.ToListAsync();
+            var claims = await _context.Claims
+                                       .Include(c => c.User)
+                                       .ToListAsync();
+
             foreach (var claim in claims)
                 claim.LoadDocumentLists();
 
@@ -37,7 +45,10 @@ namespace CMCS.Controllers
         [HttpGet]
         public async Task<IActionResult> ClaimDetails(int claimId)
         {
-            var claim = await _context.Claims.FindAsync(claimId);
+            var claim = await _context.Claims
+                                      .Include(c => c.User)
+                                      .FirstOrDefaultAsync(c => c.ClaimID == claimId);
+
             if (claim == null)
                 return NotFound();
 
@@ -49,13 +60,16 @@ namespace CMCS.Controllers
         [HttpGet]
         public async Task<IActionResult> DownloadFile(int claimId, string file)
         {
-            var claim = await _context.Claims.FindAsync(claimId);
+            var claim = await _context.Claims
+                                      .Include(c => c.User)
+                                      .FirstOrDefaultAsync(c => c.ClaimID == claimId);
+
             if (claim == null)
                 return NotFound();
 
             claim.LoadDocumentLists();
 
-            if (!claim.EncryptedDocuments.Contains(file))
+            if (claim.EncryptedDocuments == null || !claim.EncryptedDocuments.Contains(file))
                 return NotFound();
 
             var filePath = Path.Combine(
@@ -73,7 +87,9 @@ namespace CMCS.Controllers
             {
                 var memoryStream = await _encryptionService.DecryptFileAsync(filePath);
                 var originalIndex = claim.EncryptedDocuments.IndexOf(file);
-                var originalName = claim.OriginalDocuments[originalIndex];
+                var originalName = claim.OriginalDocuments != null
+                    ? claim.OriginalDocuments.ElementAtOrDefault(originalIndex) ?? file
+                    : file;
 
                 return File(memoryStream, "application/octet-stream", originalName);
             }
@@ -85,15 +101,16 @@ namespace CMCS.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> VerifyOrRejectClaim(int claimId, string verifiedBy, string actionType)
+        public async Task<IActionResult> VerifyOrRejectClaim(int claimId, string actionType)
         {
-            if (string.IsNullOrWhiteSpace(verifiedBy))
-            {
-                TempData["Error"] = "Name is required.";
-                return RedirectToAction("Dashboard");
-            }
+            var appUser = await _userManager.GetUserAsync(User);
+            var verifier = appUser != null
+                ? $"{appUser.FirstName} {appUser.LastName}".Trim()
+                : User.Identity?.Name ?? "-";
 
-            var claim = await _context.Claims.FindAsync(claimId);
+            var claim = await _context.Claims
+                                      .FirstOrDefaultAsync(c => c.ClaimID == claimId);
+
             if (claim == null)
             {
                 TempData["Error"] = "Claim not found.";
@@ -108,19 +125,19 @@ namespace CMCS.Controllers
                 return RedirectToAction("Dashboard");
             }
 
-            if (actionType == "verify")
+            if (string.Equals(actionType, "verify", StringComparison.OrdinalIgnoreCase))
             {
                 claim.VerificationStatus = ClaimVerificationStatus.Verified;
-                claim.VerifiedBy = verifiedBy;
+                claim.VerifiedBy = verifier;
                 claim.VerifiedOn = DateTime.UtcNow;
-                TempData["Message"] = $"Claim #{claimId} verified by {verifiedBy}.";
+                TempData["Message"] = $"Claim #{claimId} verified by {verifier}.";
             }
-            else if (actionType == "reject")
+            else if (string.Equals(actionType, "reject", StringComparison.OrdinalIgnoreCase))
             {
                 claim.VerificationStatus = ClaimVerificationStatus.Rejected;
-                claim.VerifiedBy = verifiedBy;
+                claim.VerifiedBy = verifier;
                 claim.VerifiedOn = DateTime.UtcNow;
-                TempData["Message"] = $"Claim #{claimId} rejected by {verifiedBy}.";
+                TempData["Message"] = $"Claim #{claimId} rejected by {verifier}.";
             }
 
             claim.SaveDocumentLists();
