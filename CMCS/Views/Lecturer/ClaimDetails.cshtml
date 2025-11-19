@@ -16,9 +16,10 @@
         <p><strong>Claim ID:</strong> @claim.ClaimID</p>
         <p><strong>Claim Month:</strong> @claim.Month</p>
         <p><strong>Hours Worked:</strong> @claim.HoursWorked</p>
-        <p><strong>Hourly Rate:</strong> R @claim.HourlyRate</p>
-        <p><strong>Total Amount:</strong> R @claim.TotalAmount</p>
-        <p><strong>Submitted By:</strong> @claim.SubmittedBy</p>
+        <p><strong>Hourly Rate:</strong> R @String.Format("{0:N2}", claim.HourlyRate)</p>
+        <p><strong>Total Amount:</strong> R @String.Format("{0:N2}", claim.TotalAmount)</p>
+
+        <p><strong>Submitted By:</strong> @(claim.User != null ? $"{claim.User.FirstName} {claim.User.LastName}" : "-")</p>
 
         <p>
             <strong>Verification:</strong>
@@ -28,7 +29,7 @@
                   claim.VerificationStatus == ClaimVerificationStatus.Verified ? "#4CAF50" :
                   claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B" :
                   "#D67F2B"
-                                                                                                                                                                                                        );
+                                                  );
                          margin-left:8px;">
                 @claim.VerificationStatus
             </span>
@@ -42,7 +43,7 @@
                   claim.ApprovalStatus == ClaimApprovalStatus.Approved ? "#4CAF50" :
                   claim.ApprovalStatus == ClaimApprovalStatus.Rejected ? "#C0392B" :
                   "#D67F2B"
-                                                                                                                                                                                                        );
+                                                  );
                          margin-left:8px;">
                 @claim.ApprovalStatus
             </span>

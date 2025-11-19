@@ -19,7 +19,6 @@ namespace CMCS.Models
         public int HoursWorked { get; set; }
 
         [Required]
-        [Range(100, 2000)]
         public decimal HourlyRate { get; set; }
 
         public decimal TotalAmount => HoursWorked * HourlyRate;
@@ -28,7 +27,11 @@ namespace CMCS.Models
         public ClaimApprovalStatus ApprovalStatus { get; set; } = ClaimApprovalStatus.Pending;
 
         public DateTime SubmittedOn { get; set; } = DateTime.UtcNow;
-        public string SubmittedBy { get; set; } = "-";
+
+        [Required]
+        public string UserId { get; set; }      
+        [ForeignKey("UserId")]
+        public ApplicationUser User { get; set; } 
 
         public string VerifiedBy { get; set; } = "-";
         public DateTime? VerifiedOn { get; set; }

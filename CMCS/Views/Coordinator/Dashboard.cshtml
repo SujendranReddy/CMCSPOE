@@ -32,7 +32,6 @@
                 {
                     <tr style="border-bottom:1px solid #ddd;">
                         <td style="padding:12px;">@claim.Month</td>
-                        <td style="padding:12px;">@claim.SubmittedBy</td>
                         <td style="padding:12px;">@claim.HoursWorked</td>
                         <td style="padding:12px;">@claim.HourlyRate</td>
 
@@ -89,7 +88,6 @@
     </div>
 </div>
 
-<!-- This popup appears when verify or reject is clicked, it prompts the user to enter their full name before proceeding -->
 <div id="namePopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.4); justify-content:center; align-items:center;">
     <div style="background:white; padding:25px; border-radius:10px; width:320px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.2);">
@@ -115,7 +113,6 @@
     let currentClaimId = null;
     let currentAction = null;
 
-    // this opens the popup and stores which claim is being verified or rejected
     function openNamePopup(claimId, action) {
         currentClaimId = claimId;
         currentAction = action;
@@ -124,13 +121,11 @@
         document.getElementById('namePopup').style.display = 'flex';
     }
 
-    // this closes the popup and clears the name
     function closeNamePopup() {
         document.getElementById('namePopup').style.display = 'none';
         document.getElementById('verifierName').value = '';
     }
 
-    // this validates the name and submits the action (verify or reject)
     function submitAction() {
         const name = document.getElementById('verifierName').value.trim();
         if (!name) {
@@ -144,8 +139,6 @@
         document.getElementById('verifyForm').submit();
     }
 
-    // The search bar filters thorugh the table rows as the user types into the search box
-    // It matches against month (num), submitted by, or verification
     const searchInput = document.getElementById("searchInput");
     const claimsTable = document.getElementById("claimsTable");
     const rows = claimsTable.querySelectorAll("tbody tr");
@@ -158,7 +151,6 @@
             const submittedBy = row.cells[1].textContent.toLowerCase();
             const verification = row.cells[4].textContent.toLowerCase();
 
-            // Only shows rows that matched
             row.style.display = (month.includes(filter) || submittedBy.includes(filter) || verification.includes(filter)) ? "" : "none";
         });
     });

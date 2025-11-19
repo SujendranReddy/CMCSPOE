@@ -1,7 +1,7 @@
 ﻿@using CMCS.Models
 @{
     ViewData["Title"] = "Lecturer Dashboard";
-    var claims = ViewBag.Claims;
+    var claims = ViewBag.Claims as List<Claim> ?? new List<Claim>();
 }
 
 <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; padding: 30px; background-color:#F5F5F5; min-height:100vh;">
@@ -39,7 +39,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var claim in claims)
+            @foreach (Claim claim in claims)
             {
                 var verificationColor = claim.VerificationStatus == ClaimVerificationStatus.Verified ? "#4CAF50"
                 : claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B"
@@ -52,15 +52,19 @@
                 <tr style="border-bottom:1px solid #ccc;">
                     <td style="padding:10px;">@claim.Month</td>
                     <td style="padding:10px;">@claim.HoursWorked</td>
-                    <td style="padding:10px;">@claim.HourlyRate</td>
-                    <td style="padding:10px;">@claim.SubmittedBy</td>
+                    <td style="padding:10px;">R @String.Format("{0:N2}", claim.HourlyRate)</td>
+                    <td style="padding:10px;">@(claim.User != null ? $"{claim.User.FirstName} {claim.User.LastName}" : "-")</td>
 
-                    <td style="padding:10px; color:white; font-weight:bold; background-color:@verificationColor; text-align:center;">
-                        @claim.VerificationStatus
+                    <td style="padding:10px;">
+                        <div style="color:white; font-weight:bold; background-color:@verificationColor; text-align:center; padding:6px 8px; border-radius:4px;">
+                            @claim.VerificationStatus
+                        </div>
                     </td>
 
-                    <td style="padding:10px; color:white; font-weight:bold; background-color:@approvalColor; text-align:center;">
-                        @claim.ApprovalStatus
+                    <td style="padding:10px;">
+                        <div style="color:white; font-weight:bold; background-color:@approvalColor; text-align:center; padding:6px 8px; border-radius:4px;">
+                            @claim.ApprovalStatus
+                        </div>
                     </td>
 
                     <td style="padding:10px;">

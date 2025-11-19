@@ -31,7 +31,6 @@
                 {
                     <tr style="border-bottom:1px solid #ddd;">
                         <td style="padding:12px;">@claim.Month</td>
-                        <td style="padding:12px;">@claim.SubmittedBy</td>
                         <td style="padding:12px;">@claim.HoursWorked</td>
                         <td style="padding:12px;">@claim.HourlyRate</td>
 
@@ -134,7 +133,6 @@
         document.getElementById('finalizeForm').submit();
     }
 
-    // Similar to other search bars but variable includes approval
     const searchInput = document.getElementById("searchInput");
     const claimsTable = document.getElementById("claimsTable");
     const rows = claimsTable.querySelectorAll("tbody tr");
