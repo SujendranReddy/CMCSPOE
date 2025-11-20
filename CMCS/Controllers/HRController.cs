@@ -7,11 +7,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Linq;
 using System.Threading.Tasks;
 
+// Only HR users can access this controller
 [Authorize(Roles = "HR")]
 public class HRController : Controller
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly UserManager<ApplicationUser> _userManager; 
+    private readonly RoleManager<IdentityRole> _roleManager; 
 
     public HRController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
@@ -21,12 +22,13 @@ public class HRController : Controller
 
     public async Task<IActionResult> Index()
     {
+        // This gets all users from the database
         var users = _userManager.Users.ToList();
         var model = new List<UserCreateEditViewModel>();
 
         foreach (var user in users)
         {
-            var roles = await _userManager.GetRolesAsync(user);
+            var roles = await _userManager.GetRolesAsync(user); 
             model.Add(new UserCreateEditViewModel
             {
                 Id = user.Id,
@@ -35,7 +37,7 @@ public class HRController : Controller
                 Email = user.Email,
                 HourlyRate = user.HourlyRate,
                 MaxHoursPerMonth = user.MaxHoursPerMonth,
-                Role = roles.FirstOrDefault()
+                Role = roles.FirstOrDefault() 
             });
         }
 
@@ -44,8 +46,9 @@ public class HRController : Controller
 
     public IActionResult Create()
     {
+        // This populates the dropdown with role
         ViewBag.Roles = new SelectList(new[] { "HR", "Lecturer", "Coordinator", "Manager" });
-        return View(new UserCreateEditViewModel());
+        return View(new UserCreateEditViewModel()); 
     }
 
     [HttpPost]
@@ -58,13 +61,11 @@ public class HRController : Controller
         if (string.IsNullOrWhiteSpace(model.Password))
         {
             ModelState.AddModelError("Password", "A password is required when creating a user.");
-            return View(model);
+            return View(model); 
         }
 
         if (!ModelState.IsValid)
-        {
             return View(model);
-        }
 
         var user = new ApplicationUser
         {
@@ -76,6 +77,7 @@ public class HRController : Controller
             MaxHoursPerMonth = model.MaxHoursPerMonth
         };
 
+        // This creates user in the database
         var result = await _userManager.CreateAsync(user, model.Password);
 
         if (!result.Succeeded)
@@ -83,29 +85,31 @@ public class HRController : Controller
             foreach (var err in result.Errors)
                 ModelState.AddModelError(string.Empty, err.Description);
 
-            return View(model);
+            return View(model); 
         }
 
+        // This assigns roles 
         if (!string.IsNullOrEmpty(model.Role))
         {
             if (!await _roleManager.RoleExistsAsync(model.Role))
-                await _roleManager.CreateAsync(new IdentityRole(model.Role));
+                await _roleManager.CreateAsync(new IdentityRole(model.Role)); 
 
-            await _userManager.AddToRoleAsync(user, model.Role);
+            await _userManager.AddToRoleAsync(user, model.Role); 
         }
 
         TempData["Success"] = $"User {user.Email} created.";
-        return RedirectToAction("Index");
+        return RedirectToAction("Index"); 
     }
 
     public async Task<IActionResult> Edit(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
-        if (user == null) return NotFound();
+        var user = await _userManager.FindByIdAsync(id); 
+        if (user == null) return NotFound(); 
 
-        var userRoles = await _userManager.GetRolesAsync(user);
-        ViewBag.Roles = new SelectList(new[] { "HR", "Lecturer", "Coordinator", "Manager" }, userRoles.FirstOrDefault());
+        var userRoles = await _userManager.GetRolesAsync(user); 
+        ViewBag.Roles = new SelectList(new[] { "HR", "Lecturer", "Coordinator", "Manager" }, userRoles.FirstOrDefault()); // This preselcts the current role
 
+        // This populates the current users data
         return View(new UserCreateEditViewModel
         {
             Id = user.Id,
@@ -133,9 +137,8 @@ public class HRController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var user = await _userManager.FindByIdAsync(model.Id);
-        if (user == null)
-            return NotFound();
+        var user = await _userManager.FindByIdAsync(model.Id); 
+        if (user == null) return NotFound();
 
         user.FirstName = model.FirstName;
         user.LastName = model.LastName;
@@ -145,42 +148,43 @@ public class HRController : Controller
         user.MaxHoursPerMonth = model.MaxHoursPerMonth;
 
         var result = await _userManager.UpdateAsync(user);
-
         if (!result.Succeeded)
         {
             foreach (var error in result.Errors)
                 ModelState.AddModelError("", error.Description);
-            return View(model);
+
+            return View(model); 
         }
 
+        // This is for updating user role if it changed
         if (!string.IsNullOrEmpty(model.Role))
         {
             var currentRoles = await _userManager.GetRolesAsync(user);
-            await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            await _userManager.RemoveFromRolesAsync(user, currentRoles); // removes old roles
 
             if (!await _roleManager.RoleExistsAsync(model.Role))
-                await _roleManager.CreateAsync(new IdentityRole(model.Role));
+                await _roleManager.CreateAsync(new IdentityRole(model.Role)); // creates role just incase
 
-            await _userManager.AddToRoleAsync(user, model.Role);
+            await _userManager.AddToRoleAsync(user, model.Role); // adds new role
         }
 
+        // abd updates password if changed
         if (!string.IsNullOrEmpty(model.Password))
         {
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             await _userManager.ResetPasswordAsync(user, token, model.Password);
         }
 
-        TempData["Success"] = $"User {user.Email} updated successfully.";
+        TempData["Success"] = $"User {user.Email} updated successfully."; 
         return RedirectToAction("Index");
     }
 
     public async Task<IActionResult> Details(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
-        if (user == null)
-            return NotFound();
+        var user = await _userManager.FindByIdAsync(id); 
+        if (user == null) return NotFound();
 
-        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault(); 
 
         var model = new UserCreateEditViewModel
         {
@@ -198,11 +202,10 @@ public class HRController : Controller
 
     public async Task<IActionResult> Delete(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
-        if (user == null)
-            return NotFound();
+        var user = await _userManager.FindByIdAsync(id); 
+        if (user == null) return NotFound();
 
-        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault(); 
 
         var model = new UserCreateEditViewModel
         {
@@ -221,11 +224,10 @@ public class HRController : Controller
     [HttpPost, ActionName("DeleteConfirmed")]
     public async Task<IActionResult> DeleteConfirmed(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
-        if (user == null)
-            return NotFound();
+        var user = await _userManager.FindByIdAsync(id); 
+        if (user == null) return NotFound();
 
-        var result = await _userManager.DeleteAsync(user);
+        var result = await _userManager.DeleteAsync(user); 
 
         if (result.Succeeded)
             return RedirectToAction("Index");
@@ -233,6 +235,6 @@ public class HRController : Controller
         foreach (var error in result.Errors)
             ModelState.AddModelError("", error.Description);
 
-        return View(user);
+        return View(user); 
     }
 }

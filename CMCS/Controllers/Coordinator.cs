@@ -49,6 +49,10 @@ namespace CMCS.Controllers
         [HttpGet]
         public async Task<IActionResult> ClaimDetails(int claimId)
         {
+            var claims = await _context.Claims
+                                       .Include(c => c.User)
+                                       .ToListAsync();
+
             // This finds the claim by ID
             var claim = await _context.Claims
                                       .Include(c => c.User)

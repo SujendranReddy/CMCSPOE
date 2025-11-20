@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace CMCS.Controllers
 {
+    // Only Managers can access this controller
     [Authorize(Roles = "Manager")]
     public class ManagerController : Controller
     {
@@ -27,12 +28,17 @@ namespace CMCS.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
+            var claims = await _context.Claims
+                                      .Include(c => c.User)
+                                      .ToListAsync();
+
+            // This gets only verified claims for the manager
             var verifiedClaims = await _context.Claims
                 .Where(c => c.VerificationStatus == ClaimVerificationStatus.Verified)
                 .ToListAsync();
 
             foreach (var claim in verifiedClaims)
-                claim.LoadDocumentLists();
+                claim.LoadDocumentLists(); // this populates file lists for each claim
 
             ViewBag.Claims = verifiedClaims;
             ViewBag.PendingCount = verifiedClaims.Count(c => c.ApprovalStatus == ClaimApprovalStatus.Pending);
@@ -45,12 +51,17 @@ namespace CMCS.Controllers
         [HttpGet]
         public async Task<IActionResult> ClaimDetails(int claimId)
         {
+            var claims = await _context.Claims
+                                       .Include(c => c.User)
+                                       .ToListAsync();
+
             var claim = await _context.Claims.FindAsync(claimId);
             if (claim == null)
                 return NotFound();
 
-            claim.LoadDocumentLists();
+            claim.LoadDocumentLists(); 
             ViewBag.Claim = claim;
+
             return View();
         }
 
@@ -61,7 +72,7 @@ namespace CMCS.Controllers
             if (claim == null)
                 return NotFound();
 
-            claim.LoadDocumentLists();
+            claim.LoadDocumentLists(); // this populates the file lists
 
             if (!claim.EncryptedDocuments.Contains(file))
                 return NotFound();
@@ -80,6 +91,7 @@ namespace CMCS.Controllers
             try
             {
                 var memoryStream = await _encryptionService.DecryptFileAsync(filePath);
+
                 var originalIndex = claim.EncryptedDocuments.IndexOf(file);
                 var originalName = claim.OriginalDocuments[originalIndex];
 
@@ -102,8 +114,9 @@ namespace CMCS.Controllers
                 return RedirectToAction("Dashboard");
             }
 
-            claim.LoadDocumentLists();
+            claim.LoadDocumentLists(); 
 
+            // Only allow  the Approved or Rejected are allowed as new statuses 
             if (Enum.TryParse(status, true, out ClaimApprovalStatus newStatus) &&
                 (newStatus == ClaimApprovalStatus.Approved || newStatus == ClaimApprovalStatus.Rejected))
             {
@@ -112,11 +125,12 @@ namespace CMCS.Controllers
                     ? $"{appUser.FirstName} {appUser.LastName}".Trim()
                     : User.Identity?.Name ?? "-";
 
+                // This updates claim approval details
                 claim.ApprovalStatus = newStatus;
                 claim.ApprovedBy = managerName;
                 claim.ApprovedOn = DateTime.UtcNow;
 
-                claim.SaveDocumentLists();
+                claim.SaveDocumentLists(); // this saves file lists
                 _context.Claims.Update(claim);
                 await _context.SaveChangesAsync();
 

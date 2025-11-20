@@ -14,14 +14,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
+        // Ensure decimal precision for ApplicationUser HourlyRate
         builder.Entity<ApplicationUser>()
                .Property(u => u.HourlyRate)
                .HasPrecision(18, 2);
 
+        // Ensure decimal precision for Claim HourlyRate
         builder.Entity<Claim>()
                .Property(u => u.HourlyRate)
                .HasPrecision(18, 2);
     }
-    public DbSet<Claim> Claims { get; set; }
 
+    // Claims table in the database
+    public DbSet<Claim> Claims { get; set; }
 }
