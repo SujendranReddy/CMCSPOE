@@ -1,0 +1,69 @@
+﻿@{
+    Layout = "_Layout";
+    ViewData["Title"] = "HR Reports";
+}
+
+<style>
+    .page-wrapper {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        padding: 30px;
+        background: #F5F5F5;
+        min-height: 100vh;
+    }
+
+    .card {
+        max-width: 700px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    }
+
+    .form-control-custom {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #dcdcdc;
+        margin-top: 6px;
+        box-sizing: border-box;
+    }
+
+    .btn-primary {
+        background: #2980B9;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: none;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="card">
+        <h2 style="margin-top:0; color:#2C3E50;">Generate Claims Report</h2>
+
+        <form asp-action="GeneratePdfReport" method="post">
+            <div style="margin-bottom:12px;">
+                <label for="startDate" class="form-label-strong">Start Date:</label>
+                <input type="date" name="startDate" id="startDate" class="form-control-custom" />
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label for="endDate" class="form-label-strong">End Date:</label>
+                <input type="date" name="endDate" id="endDate" class="form-control-custom" />
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label for="verificationStatus" class="form-label-strong">Verification Status:</label>
+                <select name="verificationStatus" id="verificationStatus" class="form-control-custom" style="padding:9px;">
+                    <option value="">All</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Verified">Verified</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-primary">Generate PDF</button>
+        </form>
+    </div>
+</div>

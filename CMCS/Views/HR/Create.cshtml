@@ -1,66 +1,176 @@
 ﻿@model CMCS.Models.UserCreateEditViewModel
 
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "Create User";
 }
 
-<h2>Create New User</h2>
+<style>
+    .page-wrapper {
+        font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+        padding: 30px;
+        background-color: #F5F5F5;
+        min-height: 100vh;
+    }
 
-<div asp-validation-summary="All" class="text-danger"></div>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    }
 
-<form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
+    .form-control-custom {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #dcdcdc;
+        margin-top: 6px;
+        box-sizing: border-box;
+    }
 
-    <div class="mb-3">
-        <label asp-for="FirstName" class="form-label"></label>
-        <input asp-for="FirstName" class="form-control" />
-        <span asp-validation-for="FirstName" class="text-danger"></span>
+    .form-label-strong {
+        font-weight: 600;
+        color: #2C3E50;
+    }
+
+    .btn-primary, .btn-success, .btn-secondary, .btn-danger {
+        display: inline-block;
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-success {
+        background: #27AE60;
+    }
+
+    .btn-primary {
+        background: #2980B9;
+    }
+
+    .btn-secondary {
+        background: #6C757D;
+    }
+
+    .btn-danger {
+        background: #C0392B;
+    }
+
+        .btn-primary:hover, .btn-success:hover, .btn-secondary:hover, .btn-danger:hover {
+            filter: brightness(0.95);
+            transform: translateY(-1px);
+            transition: all 0.15s;
+        }
+
+    .text-danger {
+        color: #C0392B;
+    }
+
+    .form-actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="card">
+        <h2 style="margin-top:0; color:#2C3E50;">Create New User</h2>
+
+        <div asp-validation-summary="All" class="text-danger" style="margin-bottom:12px;"></div>
+
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="Role" class="form-label-strong">Role</label>
+                <select asp-for="Role" asp-items="ViewBag.Roles" class="form-control-custom" style="padding:9px;" id="RoleSelect">
+                    <option value="">Select Role</option>
+                </select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="FirstName" class="form-label-strong"></label>
+                <input asp-for="FirstName" class="form-control-custom" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="LastName" class="form-label-strong"></label>
+                <input asp-for="LastName" class="form-control-custom" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="Email" class="form-label-strong"></label>
+                <input asp-for="Email" class="form-control-custom" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div id="lecturer-fields">
+
+                <div style="margin-bottom:12px;">
+                    <label asp-for="HourlyRate" class="form-label-strong"></label>
+                    <input asp-for="HourlyRate" class="form-control-custom" id="HourlyRateInput" />
+                    <span asp-validation-for="HourlyRate" class="text-danger"></span>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label asp-for="MaxHoursPerMonth" class="form-label-strong"></label>
+                    <input asp-for="MaxHoursPerMonth" class="form-control-custom" id="MaxHoursInput" />
+                    <span asp-validation-for="MaxHoursPerMonth" class="text-danger"></span>
+                </div>
+
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="Password" class="form-label-strong"></label>
+                <input asp-for="Password" type="password" class="form-control-custom" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-success btn-primary btn-success">Create</button>
+                <a asp-action="Index" class="btn-secondary" style="color:#fff; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Cancel</a>
+            </div>
+        </form>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="LastName" class="form-label"></label>
-        <input asp-for="LastName" class="form-control" />
-        <span asp-validation-for="LastName" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="HourlyRate" class="form-label"></label>
-        <input asp-for="HourlyRate" class="form-control" />
-        <span asp-validation-for="HourlyRate" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="MaxHoursPerMonth" class="form-label"></label>
-        <input asp-for="MaxHoursPerMonth" class="form-control" />
-        <span asp-validation-for="MaxHoursPerMonth" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Password" class="form-label"></label>
-        <input asp-for="Password" type="password" class="form-control" />
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Role" class="form-label">Role</label>
-        <select asp-for="Role" asp-items="ViewBag.Roles" class="form-select">
-            <option value="">Select Role</option>
-        </select>
-        <span asp-validation-for="Role" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-success">Create</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-</form>
+</div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        function toggleLecturerFields() {
+            const role = document.getElementById("RoleSelect").value;
+            const fields = document.getElementById("lecturer-fields");
+            const rateInput = document.getElementById("HourlyRateInput");
+            const hoursInput = document.getElementById("MaxHoursInput");
+
+            if (role === "Lecturer") {
+                fields.style.display = "block";
+
+                if (rateInput.value === "0") rateInput.value = "";
+                if (hoursInput.value === "0") hoursInput.value = "";
+
+            } else {
+                fields.style.display = "none";
+
+                rateInput.value = "0";
+                hoursInput.value = "0";
+            }
+        }
+
+        window.onload = toggleLecturerFields;
+        document.getElementById("RoleSelect").addEventListener("change", toggleLecturerFields);
+    </script>
 }

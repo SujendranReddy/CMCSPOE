@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -147,15 +148,25 @@ namespace CMCS.Controllers
                 newClaim.Month = DateTime.UtcNow.ToString("MMMM yyyy");
 
             var month = newClaim.Month;
+
             var monthlyHours = await _context.Claims
                 .Where(c => c.UserId == user.Id && c.Month == month)
                 .Select(c => (int?)c.HoursWorked)
                 .SumAsync() ?? 0;
 
-            if (monthlyHours + newClaim.HoursWorked > user.MaxHoursPerMonth)
+            var totalAfter = monthlyHours + newClaim.HoursWorked;
+
+            if (totalAfter > user.MaxHoursPerMonth)
             {
-                ModelState.AddModelError("", $"You have already submitted {monthlyHours} hours this month. Max allowed: {user.MaxHoursPerMonth}.");
-                return View(newClaim);
+                int remainingAllowed = user.MaxHoursPerMonth - monthlyHours;
+
+                if (remainingAllowed < 0)
+                    remainingAllowed = 0;
+
+                newClaim.HoursWorked = remainingAllowed;
+
+                TempData["ErrorMessage"] =
+                    $"You have exceeded your monthly limit. You will only be paid for the remaining hours allowed: {remainingAllowed}";
             }
 
             newClaim.UserId = user.Id;
@@ -198,6 +209,7 @@ namespace CMCS.Controllers
             TempData["SuccessMessage"] = "Claim submitted successfully.";
             return RedirectToAction("Dashboard");
         }
+
 
     }
 }

@@ -218,7 +218,7 @@ public class HRController : Controller
         return View(model);
     }
 
-    [HttpPost, ActionName("Delete")]
+    [HttpPost, ActionName("DeleteConfirmed")]
     public async Task<IActionResult> DeleteConfirmed(string id)
     {
         var user = await _userManager.FindByIdAsync(id);

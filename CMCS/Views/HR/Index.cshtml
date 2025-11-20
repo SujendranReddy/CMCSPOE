@@ -2,45 +2,120 @@
 @model IEnumerable<UserCreateEditViewModel>
 
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "Users List";
 }
 
-<h2>Users</h2>
+<style>
+    .page-wrapper {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        padding: 30px;
+        background: #F5F5F5;
+        min-height: 100vh;
+    }
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New User</a>
-</p>
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Hourly Rate</th>
-            <th>Max Hours/Month</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
-            bool isLecturer = user.Role == "Lecturer";
+    .table-responsive {
+        overflow-x: auto;
+    }
 
-            <tr>
-                <td>@user.FirstName</td>
-                <td>@user.LastName</td>
-                <td>@user.Email</td>
-                <td>@user.Role</td>
-                <td>@(isLecturer? user.HourlyRate.ToString("F2") : "-")</td>
-                <td>@(isLecturer? user.MaxHoursPerMonth.ToString() : "-")</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-info btn-sm">View</a>
-                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-warning btn-sm">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-danger btn-sm">Delete</a>
-                </td>
-            </tr>
+    table.users-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        table.users-table thead {
+            background: #2C3E50;
+            color: #fff;
+            text-transform: uppercase;
+            font-size: 13px;
         }
-    </tbody>
-</table>
+
+        table.users-table th, table.users-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        table.users-table tr:hover {
+            background: #f8f8f8;
+        }
+
+    .btn-sm {
+        padding: 6px 10px;
+        border-radius: 6px;
+        color: #fff;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .btn-info {
+        background: #17A2B8;
+    }
+
+    .btn-warning {
+        background: #F39C12;
+    }
+
+    .btn-danger {
+        background: #C0392B;
+    }
+
+    .btn-primary {
+        background: #2980B9;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <h2 style="margin:0; color:#2C3E50;">Users</h2>
+        <a asp-action="Create" class="btn-primary" style="padding:10px 14px; border-radius:8px; color:#fff; text-decoration:none;">Create New User</a>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Hourly Rate</th>
+                        <th>Max Hours/Month</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        bool isLecturer = user.Role == "Lecturer";
+                        <tr>
+                            <td>@user.FirstName</td>
+                            <td>@user.LastName</td>
+                            <td>@user.Email</td>
+                            <td>@user.Role</td>
+                            <td>@(isLecturer? user.HourlyRate.ToString("F2") : "-")</td>
+                            <td>@(isLecturer? user.MaxHoursPerMonth.ToString() : "-")</td>
+                            <td style="white-space:nowrap;">
+                                <a asp-action="Details" asp-route-id="@user.Id" class="btn-info btn-sm" style="margin-right:6px;">View</a>
+                                <a asp-action="Edit" asp-route-id="@user.Id" class="btn-warning btn-sm" style="margin-right:6px;">Edit</a>
+                                <a asp-action="Delete" asp-route-id="@user.Id" class="btn-danger btn-sm">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

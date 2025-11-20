@@ -1,30 +1,71 @@
 ﻿@{
     Layout = "_Layout";
+    ViewData["Title"] = "Login - CMCS";
 }
 
-<h2>Login</h2>
+<div style="background-color:#F5F5F5; min-height:100vh; display:flex; justify-content:center; align-items:center; font-family: Arial, sans-serif; padding:20px;">
+    <div style="max-width:400px; width:100%; padding:40px; background-color:#fff; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.08);">
 
-<div class="row">
-    <div class="col-md-4">
+        <h2 style="text-align:center; color:#2C3E50; margin-bottom:20px; font-weight:600;">Login</h2>
+        <h5 style="text-align:center; color:#34495E; margin-bottom:30px; font-weight:400;">
+            Contract Monthly Claim System
+        </h5>
+
         <form method="post" asp-action="Login">
-            <div class="form-group">
-                <label>Email</label>
-                <input type="text" name="email" class="form-control" />
+            <div class="form-group mb-3">
+                <label for="email" style="font-weight:500;">Email</label>
+                <input type="text" name="email" class="form-control" placeholder="Enter your email" required />
             </div>
 
-            <div class="form-group mt-2">
-                <label>Password</label>
-                <input type="password" name="password" class="form-control" />
+            <div class="form-group mb-4" style="position:relative;">
+                <label for="password" style="font-weight:500;">Password</label>
+                <input type="password" id="passwordInput" name="password" class="form-control" placeholder="Enter your password" required />
+
+                <span id="togglePassword"
+                      style="position:absolute; top:37px; right:12px; cursor:pointer; color:#7F8C8D; font-size:18px;">
+                    👁️
+                </span>
             </div>
 
-            <button type="submit" class="btn btn-primary mt-3">Login</button>
+            <button type="submit" class="btn btn-success w-100 py-2" style="font-size:16px; font-weight:500;">
+                Login
+            </button>
 
             @if (ViewBag.Error != null)
             {
-                <div class="alert alert-danger mt-3">
+                <div class="alert alert-danger mt-3" role="alert">
                     @ViewBag.Error
                 </div>
             }
         </form>
+
+        <p style="text-align:center; color:#7F8C8D; font-size:14px; margin-top:20px;">
+            CMCS - Contract Monthly Claim System
+        </p>
     </div>
 </div>
+
+<style>
+    input.form-control:focus {
+        border-color: #27AE60;
+        box-shadow: 0 0 5px rgba(39, 174, 96, 0.5);
+    }
+
+    button.btn:hover {
+        filter: brightness(0.95);
+        transform: translateY(-1px);
+        transition: all 0.2s;
+    }
+</style>
+
+<script>
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordInput = document.getElementById("passwordInput");
+
+    togglePassword.addEventListener("click", () => {
+        const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+        passwordInput.setAttribute("type", type);
+
+        togglePassword.textContent = type === "password" ? "👁️" : "🙈";
+    });
+</script>

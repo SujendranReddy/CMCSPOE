@@ -1,25 +1,36 @@
 ﻿@{
-    ViewData["Title"] = "Login - CMCS";
+    ViewData["Title"] = "Welcome - CMCS";
 }
-<div style="background-color:#F5F5F5; min-height:100vh; display:flex; justify-content:center; align-items:center; font-family: Arial, sans-serif;">
-    <div style="max-width:400px; width:100%; padding:30px; background-color:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); text-align:center;">
-        <h2 style="color:#2C3E50; margin-bottom:25px; font-weight:600;">Login to CMCS</h2>
+
+<div style="background-color:#F5F5F5; min-height:100vh; display:flex; justify-content:center; align-items:center; font-family: Arial, sans-serif; padding:20px;">
+    <div style="max-width:400px; width:100%; padding:40px; background-color:#fff; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.08); text-align:center;">
+
+        <h2 style="color:#2C3E50; margin-bottom:15px; font-weight:600;">Welcome to CMCS</h2>
+        <h4 style="color:#34495E; margin-bottom:30px; font-weight:400;">
+            Contract Monthly Claim System
+        </h4>
+
         <form method="get">
-            <button type="submit" formaction="@Url.Action("Dashboard", "Lecturer")"
-                    style="width:100%; padding:12px; margin-bottom:12px; background-color:#27AE60; border:none; border-radius:6px; color:#fff; font-size:16px; cursor:pointer;">
-                Lecturer
-            </button>
-
-            <button type="submit" formaction="@Url.Action("Dashboard", "Coordinator")"
-                    style="width:100%; padding:12px; margin-bottom:12px; background-color:#2980B9; border:none; border-radius:6px; color:#fff; font-size:16px; cursor:pointer;">
-                Programme Coordinator
-            </button>
-
-            <button type="submit" formaction="@Url.Action("Dashboard", "Manager")"
-                    style="width:100%; padding:12px; background-color:#6C3483; border:none; border-radius:6px; color:#fff; font-size:16px; cursor:pointer;">
-                Academic Manager
+            <button type="submit" formaction="@Url.Action("Login", "Account")"
+                    style="width:100%; padding:16px; background-color:#27AE60; border:none; border-radius:8px; color:#fff; font-size:16px; cursor:pointer; transition: all 0.2s;"
+                    aria-label="Go to Login Page">
+                Login
             </button>
         </form>
+
+        <p style="margin-top:20px; color:#7F8C8D; font-size:14px;">
+            CMCS - Contract Monthly Claim System
+        </p>
     </div>
 </div>
-<!--the buttons  direct the user their role-based interface->
+
+<style>
+    button:hover {
+        filter: brightness(0.9);
+        transform: translateY(-1px);
+    }
+
+    button:focus {
+        outline: 2px solid #2980B9;
+    }
+</style>

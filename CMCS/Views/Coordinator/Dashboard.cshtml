@@ -21,8 +21,7 @@
                     <th style="padding:14px;">Submitted By</th>
                     <th style="padding:14px;">Hours</th>
                     <th style="padding:14px;">Rate</th>
-                    <th style="padding:14px;">Verification</th>
-                    <th style="padding:14px;">Approval</th>
+                    <th style="padding:14px;">Verification Status</th>
                     <th style="padding:14px;">Actions</th>
                 </tr>
             </thead>
@@ -35,41 +34,21 @@
                         <td style="padding:12px;">
                             @(claim.User != null ? $"{claim.User.FirstName} {claim.User.LastName}" : "-")
                         </td>
-
                         <td style="padding:12px;">@claim.HoursWorked</td>
                         <td style="padding:12px;">R @String.Format("{0:N2}", claim.HourlyRate)</td>
-
-                        <td style="padding:10px;
-                                       color:white;
-                                       font-weight:bold;
-                                       text-align:center;
-                                       background-color:@(
+                        <td style="padding:10px; color:white; font-weight:bold; text-align:center;
+                                                background-color:@(
                             claim.VerificationStatus == ClaimVerificationStatus.Pending ? "#D67F2B" :
                             claim.VerificationStatus == ClaimVerificationStatus.Verified ? "#4CAF50" :
-                            claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B" :
-                            "#D67F2B"
-                                                                      ); ">
+                            claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B" : "#D67F2B"
+                                                                                                ); ">
                         @claim.VerificationStatus
                     </td>
-
-                        <td style="padding:10px;
-                                       color:white;
-                                       font-weight:bold;
-                                       text-align:center;
-                                       background-color:@(
-                                                                claim.ApprovalStatus == ClaimApprovalStatus.Pending ? "#D67F2B" :
-                                                                claim.ApprovalStatus == ClaimApprovalStatus.Approved ? "#4CAF50" :
-                                                                claim.ApprovalStatus == ClaimApprovalStatus.Rejected ? "#C0392B" :
-                                                                "#D67F2B"
-                                                                      ); ">
-                        @claim.ApprovalStatus
-                    </td>
-
-                        <td style="padding:12px;">
-                            <a href="/Coordinator/ClaimDetails?claimId=@claim.ClaimID"
-                               style="padding:8px 14px; background-color:#2A5298; color:white; text-decoration:none; border-radius:6px; margin-right:6px;">
-                                Details
-                            </a>
+                    <td style="padding:12px;">
+                        <a href="/Coordinator/ClaimDetails?claimId=@claim.ClaimID"
+                           style="padding:8px 14px; background-color:#2A5298; color:white; text-decoration:none; border-radius:6px; margin-right:6px;">
+                            Details
+                        </a>
 
                         @if (claim.VerificationStatus == ClaimVerificationStatus.Pending)
                             {

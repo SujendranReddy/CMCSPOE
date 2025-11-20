@@ -1,65 +1,124 @@
 ﻿@model CMCS.Models.UserCreateEditViewModel
 
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "Edit User";
 }
 
-<h2>Edit User</h2>
+<style>
+    .page-wrapper {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        padding: 30px;
+        background: #F5F5F5;
+        min-height: 100vh;
+    }
 
-<div asp-validation-summary="All" class="text-danger"></div>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    }
 
-<form asp-action="Edit" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Id" />
+    .form-control-custom {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #dcdcdc;
+        margin-top: 6px;
+    }
 
-    <div class="mb-3">
-        <label asp-for="FirstName" class="form-label"></label>
-        <input asp-for="FirstName" class="form-control" />
-        <span asp-validation-for="FirstName" class="text-danger"></span>
+    .form-label-strong {
+        font-weight: 600;
+        color: #2C3E50;
+    }
+
+    .btn-success {
+        background: #27AE60;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: none;
+    }
+
+    .btn-secondary {
+        background: #6C757D;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: none;
+    }
+
+    .text-muted {
+        color: #7F8C8D;
+        font-size: 13px;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="card">
+        <h2 style="margin-top:0; color:#2C3E50;">Edit User</h2>
+
+        <div asp-validation-summary="All" class="text-danger" style="margin-bottom:12px;"></div>
+
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="FirstName" class="form-label-strong"></label>
+                <input asp-for="FirstName" class="form-control-custom" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="LastName" class="form-label-strong"></label>
+                <input asp-for="LastName" class="form-control-custom" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="Email" class="form-label-strong"></label>
+                <input asp-for="Email" class="form-control-custom" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="HourlyRate" class="form-label-strong"></label>
+                <input asp-for="HourlyRate" class="form-control-custom" />
+                <span asp-validation-for="HourlyRate" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="MaxHoursPerMonth" class="form-label-strong"></label>
+                <input asp-for="MaxHoursPerMonth" class="form-control-custom" />
+                <span asp-validation-for="MaxHoursPerMonth" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="Password" class="form-label-strong"></label>
+                <input asp-for="Password" type="password" class="form-control-custom" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+                <div class="text-muted" style="margin-top:6px;">Leave blank to keep current password</div>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label asp-for="Role" class="form-label-strong">Role</label>
+                <select asp-for="Role" asp-items="ViewBag.Roles" class="form-control-custom" style="padding:9px;">
+                    <option value="">Select Role</option>
+                </select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="submit" class="btn-success">Save Changes</button>
+                <a asp-action="Index" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="LastName" class="form-label"></label>
-        <input asp-for="LastName" class="form-control" />
-        <span asp-validation-for="LastName" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="HourlyRate" class="form-label"></label>
-        <input asp-for="HourlyRate" class="form-control" />
-        <span asp-validation-for="HourlyRate" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="MaxHoursPerMonth" class="form-label"></label>
-        <input asp-for="MaxHoursPerMonth" class="form-control" />
-        <span asp-validation-for="MaxHoursPerMonth" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Password" class="form-label"></label>
-        <input asp-for="Password" type="password" class="form-control" />
-        <span asp-validation-for="Password" class="text-danger"></span>
-        <small class="text-muted">Leave blank to keep current password</small>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Role" class="form-label">Role</label>
-        <select asp-for="Role" asp-items="ViewBag.Roles" class="form-select">
-            <option value="">Select Role</option>
-        </select>
-        <span asp-validation-for="Role" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-success">Save Changes</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-</form>
+</div>
 
 @section Scripts {
     @{

@@ -1,26 +1,59 @@
 ﻿@model CMCS.Models.UserCreateEditViewModel
 
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "View User";
 }
 
-<h2>User Details</h2>
+<style>
+    .page-wrapper {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        padding: 30px;
+        background: #F5F5F5;
+        min-height: 100vh;
+    }
 
-<div class="mb-3">
-    <strong>First Name:</strong> @Model.FirstName
-</div>
-<div class="mb-3">
-    <strong>Last Name:</strong> @Model.LastName
-</div>
-<div class="mb-3">
-    <strong>Email:</strong> @Model.Email
-</div>
-<div class="mb-3">
-    <strong>Hourly Rate:</strong> @Model.HourlyRate
-</div>
-<div class="mb-3">
-    <strong>Max Hours/Month:</strong> @Model.MaxHoursPerMonth
-</div>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
 
-<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
-<a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    .btn-warning {
+        background: #F39C12;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        border: none;
+    }
+
+    .btn-secondary {
+        background: #6C757D;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        border: none;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="card">
+        <h2 style="margin-top:0; color:#2C3E50;">User Details</h2>
+
+        <div class="mb-3"><strong>First Name:</strong> @Model.FirstName</div>
+        <div class="mb-3"><strong>Last Name:</strong> @Model.LastName</div>
+        <div class="mb-3"><strong>Email:</strong> @Model.Email</div>
+        <div class="mb-3"><strong>Hourly Rate:</strong> @Model.HourlyRate</div>
+        <div class="mb-3"><strong>Max Hours/Month:</strong> @Model.MaxHoursPerMonth</div>
+
+        <div style="display:flex; gap:10px; margin-top:12px;">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-warning">Edit</a>
+            <a asp-action="Index" class="btn-secondary">Back to List</a>
+        </div>
+    </div>
+</div>

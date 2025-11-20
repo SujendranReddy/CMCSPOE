@@ -30,9 +30,38 @@
 
         <div style="margin-bottom:15px;">
             <label style="font-weight:bold; color:#2C3E50;">Claim Month</label>
-            <input asp-for="Month" type="text" placeholder="e.g. November 2025" required style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;" />
+
+            <div style="display:flex; gap:10px;">
+                <select asp-for="Month" name="Month" required
+                        style="flex:1; padding:10px; border-radius:6px; border:1px solid #ccc;">
+                    <option value="">Select Month</option>
+                    @{
+                        var months = System.Globalization.DateTimeFormatInfo.InvariantInfo.MonthNames
+                        .Where(m => !string.IsNullOrEmpty(m)).ToList();
+
+                        foreach (var m in months)
+                        {
+                            <option value="@m">@m</option>
+                        }
+                    }
+                </select>
+
+                <select name="Year" required
+                        style="width:120px; padding:10px; border-radius:6px; border:1px solid #ccc;">
+                    <option value="">Year</option>
+                    @{
+                        var currentYear = DateTime.Now.Year;
+                        for (int y = currentYear - 1; y <= currentYear + 3; y++)
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    }
+                </select>
+            </div>
+
             <span asp-validation-for="Month" class="text-danger"></span>
         </div>
+
 
         <div style="margin-bottom:15px;">
             <label style="font-weight:bold; color:#2C3E50;">Hours Worked</label>

@@ -8,7 +8,7 @@
     <h2 style="color:#1F3B6B; margin-bottom:25px; font-size:28px;">Academic Manager Dashboard</h2>
 
     <div style="margin-bottom:20px; max-width:400px;">
-        <input type="text" id="searchInput" placeholder="Search by Month, Submitted By, or Approval..."
+        <input type="text" id="searchInput" placeholder="Search by Month, Submitted By, or Verification..."
                style="width:100%; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:14px;
                       outline:none; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s;">
     </div>
@@ -21,8 +21,7 @@
                     <th style="padding:14px;">Submitted By</th>
                     <th style="padding:14px;">Hours</th>
                     <th style="padding:14px;">Rate</th>
-                    <th style="padding:14px;">Verification</th>
-                    <th style="padding:14px;">Approval</th>
+                    <th style="padding:14px;">Approval Status</th>
                     <th style="padding:14px;">Actions</th>
                 </tr>
             </thead>
@@ -31,25 +30,23 @@
                 {
                     <tr style="border-bottom:1px solid #ddd;">
                         <td style="padding:12px;">@claim.Month</td>
-                        <td style="padding:12px;">@(claim.User != null ? $"{claim.User.FirstName} {claim.User.LastName}" : "-")</td>
-                        <td style="padding:12px;">@claim.HoursWorked</td>
-                        <td style="padding:12px;">R @String.Format("{0:N2}", claim.HourlyRate)</td>
+                        <td style="padding:12px;">
+                            @(claim.User != null ? $"{claim.User.FirstName} {claim.User.LastName}" : "-")
+                        </td>
+                    <td style="padding:12px;">@claim.HoursWorked</td>
+                    <td style="padding:12px;">R @String.Format("{0:N2}", claim.HourlyRate)</td>
 
-                        <td style="padding:10px; color:white; font-weight:bold; text-align:center;
-                                            background-color:@(
-                            claim.VerificationStatus == ClaimVerificationStatus.Pending ? "#D67F2B" :
-                            claim.VerificationStatus == ClaimVerificationStatus.Verified ? "#4CAF50" :
-                            claim.VerificationStatus == ClaimVerificationStatus.Rejected ? "#C0392B" : "#D67F2B"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                ); ">
-                        @claim.VerificationStatus
-                    </td>
 
-                        <td style="padding:10px; color:white; font-weight:bold; text-align:center;
-                                            background-color:@(
-                                                                            claim.ApprovalStatus == ClaimApprovalStatus.Pending ? "#D67F2B" :
-                                                                            claim.ApprovalStatus == ClaimApprovalStatus.Approved ? "#4CAF50" :
-                                                                            claim.ApprovalStatus == ClaimApprovalStatus.Rejected ? "#C0392B" : "#D67F2B"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                ); ">
+                        <td style="padding:10px;
+                                           color:white;
+                                           font-weight:bold;
+                                           text-align:center;
+                                           background-color:@(
+                                                                                        claim.ApprovalStatus == ClaimApprovalStatus.Pending ? "#D67F2B" :
+                                                                                        claim.ApprovalStatus == ClaimApprovalStatus.Approved ? "#4CAF50" :
+                                                                                        claim.ApprovalStatus == ClaimApprovalStatus.Rejected ? "#C0392B" :
+                                                                                        "#D67F2B"
+                                                                                                                                            ); ">
                         @claim.ApprovalStatus
                     </td>
 
@@ -88,12 +85,10 @@
 <div id="namePopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.4); justify-content:center; align-items:center;">
     <div style="background:white; padding:25px; border-radius:10px; width:320px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.2);">
-        <h3 style="color:#1F3B6B; margin-bottom:15px;">Finalize Claim</h3>
-        <p style="margin-bottom:10px;">Enter your full name to finalize this claim:</p>
-        <input type="text" id="managerName" placeholder="Your name"
-               style="width:90%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-bottom:15px;" />
+        <h3 id="popupTitle" style="color:#1F3B6B; margin-bottom:15px;">Confirm Action</h3>
+        <p id="popupMessage" style="margin-bottom:15px;">Are you sure you want to proceed?</p>
         <div>
-            <button onclick="submitFinalize()" style="background-color:#2A5298; color:white; border:none; padding:8px 14px; border-radius:6px; margin-right:8px;">Submit</button>
+            <button onclick="submitFinalize()" style="background-color:#2A5298; color:white; border:none; padding:8px 14px; border-radius:6px; margin-right:8px;">Confirm</button>
             <button onclick="closeNamePopup()" style="background-color:#C0392B; color:white; border:none; padding:8px 14px; border-radius:6px;">Cancel</button>
         </div>
     </div>
@@ -103,7 +98,6 @@
     @Html.AntiForgeryToken()
     <input type="hidden" name="claimId" id="hiddenClaimId" />
     <input type="hidden" name="status" id="hiddenStatus" />
-    <input type="hidden" name="approvedBy" id="hiddenApprovedBy" />
 </form>
 
 <script>
@@ -113,24 +107,25 @@
     function openNamePopup(claimId, status) {
         currentClaimId = claimId;
         currentStatus = status;
+
+        document.getElementById('popupTitle').textContent =
+            status === 'Rejected' ? 'Reject Claim' : 'Approve Claim';
+
+        document.getElementById('popupMessage').textContent =
+            status === 'Rejected'
+                ? 'Are you sure you want to reject this claim?'
+                : 'Are you sure you want to approve this claim?';
+
         document.getElementById('namePopup').style.display = 'flex';
     }
 
     function closeNamePopup() {
         document.getElementById('namePopup').style.display = 'none';
-        document.getElementById('managerName').value = '';
     }
 
     function submitFinalize() {
-        const name = document.getElementById('managerName').value.trim();
-        if (!name) {
-            alert("Please enter your name before submitting.");
-            return;
-        }
-
         document.getElementById('hiddenClaimId').value = currentClaimId;
         document.getElementById('hiddenStatus').value = currentStatus;
-        document.getElementById('hiddenApprovedBy').value = name;
         document.getElementById('finalizeForm').submit();
     }
 
@@ -144,9 +139,9 @@
         rows.forEach(row => {
             const month = row.cells[0].textContent.toLowerCase();
             const submittedBy = row.cells[1].textContent.toLowerCase();
-            const approval = row.cells[5].textContent.toLowerCase();
+            const verification = row.cells[3].textContent.toLowerCase();
 
-            row.style.display = (month.includes(filter) || submittedBy.includes(filter) || approval.includes(filter)) ? "" : "none";
+            row.style.display = (month.includes(filter) || submittedBy.includes(filter) || verification.includes(filter)) ? "" : "none";
         });
     });
 </script>

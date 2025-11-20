@@ -8,6 +8,21 @@
     <h2 style="color:#2C3E50; margin-bottom:20px; font-size:32px; font-weight:600;">
         Lecturer Dashboard
     </h2>
+
+    @if (TempData["ErrorMessage"] != null)
+{
+    <div style="background:#ffe5e5; border:1px solid #cc0000; padding:10px; border-radius:6px; color:#cc0000; margin-bottom:15px;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="background:#e6ffed; border:1px solid #2ecc71; padding:10px; border-radius:6px; color:#27ae60; margin-bottom:15px;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
     <div style="margin-bottom:30px;">
         <a href="/Lecturer/SubmitClaim"
            style="padding:10px 20px; background-color:#D67F2B; color:white; text-decoration:none; border-radius:6px; transition:background-color 0.3s;"
