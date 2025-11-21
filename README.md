@@ -2,79 +2,219 @@ Module: PROG6212
 
 Author: Sujendran Reddy
 
-Version: Part 2 Submission
+Version: Part 3 Final Submission
 
-Youtube Link: https://youtu.be/hzcTGrePsNI?si=Hvbx2_6fNbfXnuRN 
+Youtube Link:
 
 **OVERVIEW**
 The Contract Monthly Claim System (CMCS) is a basic MVC-based app that manages the submission, 
 verification, and approval of claims made by lecturers.
 
-**WORKFLOW**
-1. Lecturer - submits claim
-2. Programme Coordinator - verifies or rejects claims
-3. Academic Manager - approves or rejects claims
+**Part 3 Enhancements:*
+- Introduced HR as a "super user" role.
+- Migrated from JSON file storage to Entity Framework (EF) database.
+- Implemented automation and validation functionalities. 
+- Implemented sessions and login funcntionality (Identity). 
 
-All data is stored in encrypted JSON files instead of a database following the project requirements.
+*Workflow*
+*HR*
+1. HR Management: The HR user can perform full CRUD functionality on all user profiles.
+2. Report Generation: The HR user can generates reports, which can be filtered by date, or claim status.
+3. No Public Registration: Users cannot self register.
 
-**Lecturer Feedback Fix Summary**
-**Original Feedback:**
+*Lecturer*
+1. Login Required: Lecturers must log in to access functionalities.
+2. Automated Data: Data created about the user created by the HR is automatically populated into the claim's model.
+3. Validation: A claim submission exceeding max monthly hours are not saved in the database. For example if a users maximum hours are 5 per month, they submitted a claim of 3 hour for January 2025, and then another for 5 for the same month and year. An error message would tell the user they have exceeded their monthly limit and as a result will only be paid for 5 hours.
+4. Auto Calculation: total amounts are calculated automatically.
+5. Claim Tracking: Lecturers can view the status(verification and approval) of their claims.
 
-“A coordinator will verify and a manager will approve. You have allowed for approval and verification 
-to be done by both coordinators and managers. Remember, a claim gets submitted by a lecturer, verified 
-by a coordinator, and approved by a manager (PC and AM can deny a claim as well). Your design does not 
-have fields to keep track of who verified/approved/denied a claim. That information must be displayed 
-back to the lecturer.”
+*Coordinator and Manager*
+1. Role-Specific Access: Coordinators verify claims, Managers approve/reject claims.
+2. Role-based Login: Users are only able to access functionalities for their specified role.
 
-**Resolution Implemented:**
-
--Restricted verification actions to Programme Coordinators only.
--Restricted approval/rejection actions to Academic Managers only.
--Added VerifiedBy and ApprovedBy properties to Claim model.
--Updated ClaimDataStore and controllers to persist this data.
--Displayed this information on dashboards and detail pages for full transparency.
-
-
-
-**Unit Testing**
-ClaimDataStoreTests.cs
-Verifies:
-Claims receive an ID and default pending status.
-Claims update correctly on verification and approval.
-JSON read/write integrity.
-Uses xUnit for structured testing.
-
+**Changes Implemented from Part 2 to Part 3**
+1. New Role: HR not present, HR added as super user.
+2. User Management: Any one could create roles, HR creates and updates all users.
+3. Lecturer Input: Manual hourly rate input, Auto-filled from HR data and auto-calculation
+4. Validation: Minimal, Hours cannot exceed max allowed.
+5. Login: Not semi implemented, Full login with sessions.
+6. Reports: Not available, HR can generate reports.
+7. Authroization & Authenticaion: Not implemented, Full implemented role-based.
 
 **Security**
-Claims are encrypted when stored.
-Data is decrypted on load.
-No sensitive information is exposed in plain text.
+- Sensitive data is protected by identity e.g. passwords.
+- Only authorized roles can access specific functions.
 
-**Technologies Used**
-ASP.NET Core MVC (C#)
-Razor Views
-xUnit Testing
-JSON File Persistence
-AES Encryption
+**User Guide**
+1. Login using HR credentials :
+   Email: hr@system.com
+   Password: Admin#1234
+2. Create users for lecturer, coordinator and manager.
+**Lecturer**
+3. Logout of HR using nav-bar top right "logout", login as a Lecturer.
+4. Submit a claim.
+5. Return to the dashboard and click details to view the claims details.
+**Programme Coordinator**
+6. Logout of lecturer, login as Coordinator.
+7. Verify or reject claims.
+8. View details to see verification status updated and verified by populated by users name.
+**Manager**
+9. Logout of Coordinator, login as Manager.
+10. Approve or reject claims.
+11. View details to see approval status updated and approved by populated by users name.
+**HR**
+12. Logout of Manager, login as HR.
+13. Click on generate report.
+14. Select filters or do not.
+15. Generate the report and view it.
+
+
+**SQL CODE**
+CREATE TABLE [dbo].[__EFMigrationsHistory] (
+    [MigrationId]    NVARCHAR (150) NOT NULL,
+    [ProductVersion] NVARCHAR (32)  NOT NULL,
+    CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY CLUSTERED ([MigrationId] ASC)
+);
+
+
+CREATE TABLE [dbo].[AspNetRoleClaims] (
+    [Id]         INT            IDENTITY (1, 1) NOT NULL,
+    [RoleId]     NVARCHAR (450) NOT NULL,
+    [ClaimType]  NVARCHAR (MAX) NULL,
+    [ClaimValue] NVARCHAR (MAX) NULL,
+    CONSTRAINT [PK_AspNetRoleClaims] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FK_AspNetRoleClaims_AspNetRoles_RoleId] FOREIGN KEY ([RoleId]) REFERENCES [dbo].[AspNetRoles] ([Id]) ON DELETE CASCADE
+);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_AspNetRoleClaims_RoleId]
+    ON [dbo].[AspNetRoleClaims]([RoleId] ASC);
 
 
 
-**Changes Implemented from Part 1 → Part 2**
+CREATE TABLE [dbo].[AspNetRoles] (
+    [Id]               NVARCHAR (450) NOT NULL,
+    [Name]             NVARCHAR (256) NULL,
+    [NormalizedName]   NVARCHAR (256) NULL,
+    [ConcurrencyStamp] NVARCHAR (MAX) NULL,
+    CONSTRAINT [PK_AspNetRoles] PRIMARY KEY CLUSTERED ([Id] ASC)
+);
 
-Data Storage – Encrypted JSON file storage
 
-Workflow Logic – Coordinator verifies; Manager approves
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [RoleNameIndex]
+    ON [dbo].[AspNetRoles]([NormalizedName] ASC) WHERE ([NormalizedName] IS NOT NULL);
 
-Claim Model – Added VerifiedBy and ApprovedBy fields
+CREATE TABLE [dbo].[AspNetUserClaims] (
+    [Id]         INT            IDENTITY (1, 1) NOT NULL,
+    [UserId]     NVARCHAR (450) NOT NULL,
+    [ClaimType]  NVARCHAR (MAX) NULL,
+    [ClaimValue] NVARCHAR (MAX) NULL,
+    CONSTRAINT [PK_AspNetUserClaims] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FK_AspNetUserClaims_AspNetUsers_UserId] FOREIGN KEY ([UserId]) REFERENCES [dbo].[AspNetUsers] ([Id]) ON DELETE CASCADE
+);
 
-Claim Status Enum for both Verification and Approval – Added full flow: Pending, Verified/Approved, Rejected
 
-Lecturer Feedback Fix – Role restrictions enforced (PC = verify, AM = approve/reject)
+GO
+CREATE NONCLUSTERED INDEX [IX_AspNetUserClaims_UserId]
+    ON [dbo].[AspNetUserClaims]([UserId] ASC);
 
-UI Improvements – Clean tables, spacing, shadows, and color-coded badges
+CREATE TABLE [dbo].[AspNetUserLogins] (
+    [LoginProvider]       NVARCHAR (450) NOT NULL,
+    [ProviderKey]         NVARCHAR (450) NOT NULL,
+    [ProviderDisplayName] NVARCHAR (MAX) NULL,
+    [UserId]              NVARCHAR (450) NOT NULL,
+    CONSTRAINT [PK_AspNetUserLogins] PRIMARY KEY CLUSTERED ([LoginProvider] ASC, [ProviderKey] ASC),
+    CONSTRAINT [FK_AspNetUserLogins_AspNetUsers_UserId] FOREIGN KEY ([UserId]) REFERENCES [dbo].[AspNetUsers] ([Id]) ON DELETE CASCADE
+);
 
-Popup Functionality – Added name entry popups for verification and approval
 
-Status Display – Color-coded status cells for clarity
+GO
+CREATE NONCLUSTERED INDEX [IX_AspNetUserLogins_UserId]
+    ON [dbo].[AspNetUserLogins]([UserId] ASC);
 
-Claim Details View – Displays verification and approval info clearly
+CREATE TABLE [dbo].[AspNetUserRoles] (
+    [UserId] NVARCHAR (450) NOT NULL,
+    [RoleId] NVARCHAR (450) NOT NULL,
+    CONSTRAINT [PK_AspNetUserRoles] PRIMARY KEY CLUSTERED ([UserId] ASC, [RoleId] ASC),
+    CONSTRAINT [FK_AspNetUserRoles_AspNetRoles_RoleId] FOREIGN KEY ([RoleId]) REFERENCES [dbo].[AspNetRoles] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_AspNetUserRoles_AspNetUsers_UserId] FOREIGN KEY ([UserId]) REFERENCES [dbo].[AspNetUsers] ([Id]) ON DELETE CASCADE
+);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_AspNetUserRoles_RoleId]
+    ON [dbo].[AspNetUserRoles]([RoleId] ASC);
+
+CREATE TABLE [dbo].[AspNetUsers] (
+    [Id]                   NVARCHAR (450)     NOT NULL,
+    [FirstName]            NVARCHAR (MAX)     NOT NULL,
+    [LastName]             NVARCHAR (MAX)     NOT NULL,
+    [HourlyRate]           DECIMAL (18, 2)    NOT NULL,
+    [MaxHoursPerMonth]     INT                NOT NULL,
+    [UserName]             NVARCHAR (256)     NULL,
+    [NormalizedUserName]   NVARCHAR (256)     NULL,
+    [Email]                NVARCHAR (256)     NULL,
+    [NormalizedEmail]      NVARCHAR (256)     NULL,
+    [EmailConfirmed]       BIT                NOT NULL,
+    [PasswordHash]         NVARCHAR (MAX)     NULL,
+    [SecurityStamp]        NVARCHAR (MAX)     NULL,
+    [ConcurrencyStamp]     NVARCHAR (MAX)     NULL,
+    [PhoneNumber]          NVARCHAR (MAX)     NULL,
+    [PhoneNumberConfirmed] BIT                NOT NULL,
+    [TwoFactorEnabled]     BIT                NOT NULL,
+    [LockoutEnd]           DATETIMEOFFSET (7) NULL,
+    [LockoutEnabled]       BIT                NOT NULL,
+    [AccessFailedCount]    INT                NOT NULL,
+    CONSTRAINT [PK_AspNetUsers] PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+
+
+GO
+CREATE NONCLUSTERED INDEX [EmailIndex]
+    ON [dbo].[AspNetUsers]([NormalizedEmail] ASC);
+
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UserNameIndex]
+    ON [dbo].[AspNetUsers]([NormalizedUserName] ASC) WHERE ([NormalizedUserName] IS NOT NULL);
+
+CREATE TABLE [dbo].[AspNetUserTokens] (
+    [UserId]        NVARCHAR (450) NOT NULL,
+    [LoginProvider] NVARCHAR (450) NOT NULL,
+    [Name]          NVARCHAR (450) NOT NULL,
+    [Value]         NVARCHAR (MAX) NULL,
+    CONSTRAINT [PK_AspNetUserTokens] PRIMARY KEY CLUSTERED ([UserId] ASC, [LoginProvider] ASC, [Name] ASC),
+    CONSTRAINT [FK_AspNetUserTokens_AspNetUsers_UserId] FOREIGN KEY ([UserId]) REFERENCES [dbo].[AspNetUsers] ([Id]) ON DELETE CASCADE
+);
+
+CREATE TABLE [dbo].[Claims] (
+    [ClaimID]                INT             IDENTITY (1, 1) NOT NULL,
+    [Month]                  NVARCHAR (MAX)  NOT NULL,
+    [HoursWorked]            INT             NOT NULL,
+    [HourlyRate]             DECIMAL (18, 2) NOT NULL,
+    [VerificationStatus]     INT             NOT NULL,
+    [ApprovalStatus]         INT             NOT NULL,
+    [SubmittedOn]            DATETIME2 (7)   NOT NULL,
+    [VerifiedBy]             NVARCHAR (MAX)  NOT NULL,
+    [VerifiedOn]             DATETIME2 (7)   NULL,
+    [ApprovedBy]             NVARCHAR (MAX)  NOT NULL,
+    [ApprovedOn]             DATETIME2 (7)   NULL,
+    [EncryptedDocumentsJson] NVARCHAR (MAX)  NOT NULL,
+    [OriginalDocumentsJson]  NVARCHAR (MAX)  NOT NULL,
+    [UserId]                 NVARCHAR (450)  DEFAULT (N'') NOT NULL,
+    CONSTRAINT [PK_Claims] PRIMARY KEY CLUSTERED ([ClaimID] ASC),
+    CONSTRAINT [FK_Claims_AspNetUsers_UserId] FOREIGN KEY ([UserId]) REFERENCES [dbo].[AspNetUsers] ([Id]) ON DELETE CASCADE
+);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_Claims_UserId]
+    ON [dbo].[Claims]([UserId] ASC);
+
+
+
+    
+   
