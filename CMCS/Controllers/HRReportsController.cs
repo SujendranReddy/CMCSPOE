@@ -4,19 +4,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
-using System.IO;
-using System.Linq;
-using static System.Net.Mime.MediaTypeNames;
+
 
 // Only HR can access this controller
 [Authorize(Roles = "HR")]
 public class HRReportsController : Controller
 {
-    private readonly ApplicationDbContext _context; 
+    private readonly ApplicationDbContext _context;
 
     public HRReportsController(ApplicationDbContext context)
     {
-        _context = context; 
+        _context = context;
     }
 
     public IActionResult Index()
@@ -25,7 +23,7 @@ public class HRReportsController : Controller
     }
 
     [HttpPost]
-    public IActionResult GeneratePdfReport(DateTime? startDate, DateTime? endDate, ClaimVerificationStatus? verificationStatus)
+    public IActionResult GeneratePdfReport(DateTime? startDate, DateTime? endDate, ClaimApprovalStatus? approvalStatus)
     {
         var claimsQuery = _context.Claims
                                   .Include(c => c.User)
@@ -39,9 +37,9 @@ public class HRReportsController : Controller
         if (endDate.HasValue)
             claimsQuery = claimsQuery.Where(c => c.SubmittedOn <= endDate.Value);
 
-        // This filters claims by verification status if selected
-        if (verificationStatus.HasValue)
-            claimsQuery = claimsQuery.Where(c => c.VerificationStatus == verificationStatus.Value);
+        // This filters claims by approval status if selected
+        if (approvalStatus.HasValue)
+            claimsQuery = claimsQuery.Where(c => c.ApprovalStatus == approvalStatus.Value);
 
         var claimsList = claimsQuery.ToList();
 
@@ -63,11 +61,11 @@ public class HRReportsController : Controller
         {
             gfx.DrawString("ClaimID", fontHeader, XBrushes.Black, xStart, yPoint);
             gfx.DrawString("Lecturer", fontHeader, XBrushes.Black, xStart + 50, yPoint);
-            gfx.DrawString("Month", fontHeader, XBrushes.Black, xStart + 200, yPoint);
+            gfx.DrawString("Month", fontHeader, XBrushes.Black, xStart + 150, yPoint);
             gfx.DrawString("Hours", fontHeader, XBrushes.Black, xStart + 250, yPoint);
             gfx.DrawString("Amount", fontHeader, XBrushes.Black, xStart + 300, yPoint);
             gfx.DrawString("Status", fontHeader, XBrushes.Black, xStart + 360, yPoint);
-            gfx.DrawString("SubmittedOn", fontHeader, XBrushes.Black, xStart + 430, yPoint);
+            gfx.DrawString("Approval Status", fontHeader, XBrushes.Black, xStart + 430, yPoint); // Replaced SubmittedOn
 
             yPoint += rowHeight; // This moves to the next row
         }
@@ -81,11 +79,6 @@ public class HRReportsController : Controller
         foreach (var claim in claimsList)
         {
             string monthFormatted = claim.Month;
-            var parts = claim.Month.Split(' ');
-            if (parts.Length == 2 && int.TryParse(parts[1], out int year))
-            {
-                monthFormatted = $"{parts[0]} {year % 10000}";
-            }
 
             // This gets lecturer name or unknown if missing
             var lecturerName = claim.User != null
@@ -95,13 +88,13 @@ public class HRReportsController : Controller
             // This draws the claim data in columns
             gfx.DrawString(claim.ClaimID.ToString(), fontRow, XBrushes.Black, xStart, yPoint);
             gfx.DrawString(lecturerName, fontRow, XBrushes.Black, xStart + 50, yPoint);
-            gfx.DrawString(monthFormatted, fontRow, XBrushes.Black, xStart + 200, yPoint);
+            gfx.DrawString(monthFormatted, fontRow, XBrushes.Black, xStart + 150, yPoint);
             gfx.DrawString(claim.HoursWorked.ToString(), fontRow, XBrushes.Black, xStart + 250, yPoint);
             gfx.DrawString(claim.TotalAmount.ToString("C"), fontRow, XBrushes.Black, xStart + 300, yPoint);
             gfx.DrawString(claim.VerificationStatus.ToString(), fontRow, XBrushes.Black, xStart + 360, yPoint);
-            gfx.DrawString(claim.SubmittedOn.ToShortDateString(), fontRow, XBrushes.Black, xStart + 430, yPoint);
+            gfx.DrawString(claim.ApprovalStatus.ToString(), fontRow, XBrushes.Black, xStart + 430, yPoint); // Replaced SubmittedOn
 
-            yPoint += rowHeight; 
+            yPoint += rowHeight;
 
             // This checks if the page is full and adds a new page if needed
             if (yPoint > page.Height - 50)
@@ -109,7 +102,7 @@ public class HRReportsController : Controller
                 page = pdf.AddPage();
                 gfx = XGraphics.FromPdfPage(page);
                 yPoint = 60;
-                DrawHeaders(); 
+                DrawHeaders();
             }
         }
 
