@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 namespace CMCS.Controllers
 {
     // Only Lecturers can access this controller
-    [Authorize(Roles = "Lecturer")]
     public class LecturerController : Controller
     {
         private readonly FileEncryptionService _encryptionService;
@@ -29,7 +28,7 @@ namespace CMCS.Controllers
             _userManager = userManager;
             _encryptionService = new FileEncryptionService(); // the file encryption helper
         }
-
+        [Authorize(Roles = "Lecturer")]
         public async Task<IActionResult> Dashboard()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -53,27 +52,59 @@ namespace CMCS.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Lecturer,Coordinator,Manager")]
         public async Task<IActionResult> DownloadFile(int claimId, string file)
         {
+            if (string.IsNullOrEmpty(file)) return BadRequest();
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            var claim = await _context.Claims.FindAsync(claimId);
+            var claim = await _context.Claims
+                                      .Include(c => c.User)
+                                      .FirstOrDefaultAsync(c => c.ClaimID == claimId);
+
             if (claim == null) return NotFound();
 
-            if (claim.UserId != user.Id) return Forbid(); // This prevents seeing other lecturers claims
+            // Role-based authorization rules (adjust to your policy)
+            if (User.IsInRole("Lecturer"))
+            {
+                // lecturers can only download their own claim files
+                if (claim.UserId != user.Id) return Forbid();
+            }
+            else if (User.IsInRole("Coordinator"))
+            {
+              
+            }
+            else if (User.IsInRole("Manager"))
+            {
+              
+            }
+            else
+            {
+                return Forbid();
+            }
 
+            // Ensure document lists are loaded
             claim.LoadDocumentLists();
 
-            if (!claim.EncryptedDocuments.Contains(file))
+            string encryptedFileName = null;
+
+            if (claim.EncryptedDocuments.Contains(file))
+            {
+                encryptedFileName = file;
+            }
+            else
+            {
+                var idx = claim.OriginalDocuments.FindIndex(x => x.Equals(file, StringComparison.OrdinalIgnoreCase));
+                if (idx >= 0 && idx < claim.EncryptedDocuments.Count)
+                    encryptedFileName = claim.EncryptedDocuments[idx];
+            }
+
+            if (string.IsNullOrEmpty(encryptedFileName))
                 return NotFound();
 
-            var filePath = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot", "uploads",
-                $"claim-{claimId}",
-                file
-            );
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", $"claim-{claimId}", encryptedFileName);
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound();
@@ -82,9 +113,9 @@ namespace CMCS.Controllers
             {
                 var memoryStream = await _encryptionService.DecryptFileAsync(filePath);
 
-                // This preserves original filename
-                var originalIndex = claim.EncryptedDocuments.IndexOf(file);
-                var originalName = claim.OriginalDocuments.ElementAtOrDefault(originalIndex) ?? file;
+                // preserve original filename where possible
+                var originalIndex = claim.EncryptedDocuments.IndexOf(encryptedFileName);
+                var originalName = claim.OriginalDocuments.ElementAtOrDefault(originalIndex) ?? encryptedFileName;
 
                 return File(memoryStream, "application/octet-stream", originalName);
             }
@@ -95,6 +126,7 @@ namespace CMCS.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Lecturer")]
         public async Task<IActionResult> ClaimDetails(int claimId)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -114,6 +146,7 @@ namespace CMCS.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Lecturer")]
         public async Task<IActionResult> SubmitClaim()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -131,6 +164,7 @@ namespace CMCS.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Lecturer")]
         public async Task<IActionResult> SubmitClaim(Claim newClaim, List<IFormFile> uploadedFiles)
         {
             if (!User.Identity.IsAuthenticated) return Challenge();
