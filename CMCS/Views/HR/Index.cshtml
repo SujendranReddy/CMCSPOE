@@ -79,8 +79,12 @@
 <div class="page-wrapper">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
         <h2 style="margin:0; color:#2C3E50;">Users</h2>
-        <a asp-action="Create" class="btn-primary" style="padding:10px 14px; border-radius:8px; color:#fff; text-decoration:none;">Create New User</a>
+        <div style="display:flex; gap:8px;">
+            <a asp-action="Create" class="btn-primary" style="padding:10px 14px; border-radius:8px; color:#fff; text-decoration:none;">Create New User</a>
+            <a asp-controller="HRReports" asp-action="Index" class="btn-info" style="padding:10px 14px; border-radius:8px; color:#fff; text-decoration:none;">Generate Report</a>
+        </div>
     </div>
+
 
     <div class="card">
         <div class="table-responsive">

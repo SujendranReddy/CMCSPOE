@@ -42,6 +42,7 @@
     <div class="card">
         <h2 style="margin-top:0; color:#2C3E50;">Generate Claims Report</h2>
 
+      
         <form asp-action="GeneratePdfReport" method="post">
             <div style="margin-bottom:12px;">
                 <label for="startDate" class="form-label-strong">Start Date:</label>
@@ -63,7 +64,12 @@
                 </select>
             </div>
 
-            <button type="submit" class="btn-primary">Generate PDF</button>
+            <div style="display:flex; gap:10px; margin-top:12px;">
+                <button type="submit" class="btn-primary">Generate PDF</button>
+                <a asp-controller="HR" asp-action="Index" style="background:#C0392B; color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; display:inline-block; text-align:center;">
+                    Back to Dashboard
+                </a>
+            </div>
         </form>
     </div>
 </div>
